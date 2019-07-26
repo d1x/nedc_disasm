@@ -53,24 +53,6 @@ class Disasm {
   }
 
   /**
-   * @param {string} opcode
-   * @private
-   */
-  static unsupported_(opcode) {
-    return `e-Reader unsupported opcode: ${Disasm.toByteString(opcode)}`;
-  }
-
-  /**
-   * @param {string} decimal
-   * @return {string} hex address 0x0000 to 0xffff
-   * @private
-   */
-  static toAddress_(decimal) {
-    const hex = parseInt(decimal).toString(16);
-    return `0x${'0000'.substr(0, 4 - hex.length)}${hex}`;
-  }
-
-  /**
    * @param {string} decimal
    * @return {string} hex address 0x00 to 0xff
    */
@@ -113,8 +95,27 @@ class Disasm {
     const output = [];
     const /** Array<string> */ lines = (Object.keys(this.map));
     lines.sort();
-    lines.forEach((line) => output.push(`${Disasm.toAddress_(line)}    ${this.map[line]}`));
+    lines.forEach((line) =>
+      output.push(`${Disasm.toAddress_(line)}    ${this.map[line]}`));
     return output.join('\n');
+  }
+
+  /**
+   * @param {string} opcode
+   * @private
+   */
+  static unsupported_(opcode) {
+    return `e-Reader unsupported opcode: ${Disasm.toByteString(opcode)}`;
+  }
+
+  /**
+   * @param {string} decimal
+   * @return {string} hex address 0x0000 to 0xffff
+   * @private
+   */
+  static toAddress_(decimal) {
+    const hex = parseInt(decimal).toString(16);
+    return `0x${'0000'.substr(0, 4 - hex.length)}${hex}`;
   }
 }
 

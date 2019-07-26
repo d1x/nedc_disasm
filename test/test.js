@@ -42,7 +42,8 @@ describe('Opcodes', () => {
       0xfb, 0xfc, 0xfd, 0xff];
     invalidOpcodes.forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
-      expect(disasm.disassemble()).to.equal(`e-Reader unsupported opcode: ${Disasm.toByteString(opcode)}`);
+      expect(disasm.disassemble()).to
+        .equal(`e-Reader unsupported opcode: ${Disasm.toByteString(opcode)}`);
     });
   });
 });
