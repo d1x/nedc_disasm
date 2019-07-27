@@ -164,7 +164,26 @@ describe('Opcodes', () => {
     };
     for(let opcode in ldOneByteOpcodes) {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
-      expect(disasm.disassemble()).to.equal(`0x0100    ${ldOneByteOpcodes[opcode]}`);
+      expect(disasm.disassemble()).to
+          .equal(`0x0100    ${ldOneByteOpcodes[opcode]}`);
+    }
+  });
+
+  it('should disassemble ld with 2-byte instructions', () => {
+    const ldTwoBytesOpcodes = {
+      0x06: 'ld b,*',
+      0x0e: 'ld c,*',
+      0x16: 'ld d,*',
+      0x1e: 'ld e,*',
+      0x26: 'ld h,*',
+      0x2e: 'ld l,*',
+      0x36: 'ld (hl),*',
+      0x3e: 'ld a,*'
+    };
+    for(let opcode in ldTwoBytesOpcodes) {
+      disasm.setUint8Array(new Uint8Array([opcode, 0xff]));
+      expect(disasm.disassemble()).to
+          .equal(`0x0100    ${ldTwoBytesOpcodes[opcode].replace('*','#0xff')}`);
     }
   });
 });
