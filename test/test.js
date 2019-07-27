@@ -36,11 +36,11 @@ describe('Opcodes', () => {
     }
   });
 
-  it('should detect invalid opcodes', () => {
-    const invalidOpcodes = [0x08, 0x27, 0xcb, 0xd7, 0xd9, 0xdb, 0xdd, 0xdf,
+  it('should detect unsupported opcodes', () => {
+    const unsupportedOpcodes = [0x08, 0x27, 0xcb, 0xd7, 0xd9, 0xdb, 0xdd, 0xdf,
       0xe0, 0xe2, 0xe4, 0xe7, 0xe8, 0xea, 0xec, 0xed, 0xef, 0xf3, 0xf4, 0xf7,
       0xfb, 0xfc, 0xfd, 0xff];
-    invalidOpcodes.forEach((opcode) => {
+    unsupportedOpcodes.forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
         .equal(`e-Reader unsupported opcode: ${Disasm.toByteString(opcode)}`);
@@ -48,7 +48,7 @@ describe('Opcodes', () => {
   });
 
   it('should disassemble dec', () => {
-    const incOpcodes = {
+    const decOpcodes = {
       0x05: 'dec b',
       0x0b: 'dec bc',
       0x0d: 'dec c',
@@ -62,9 +62,32 @@ describe('Opcodes', () => {
       0x3b: 'dec sp',
       0x3d: 'dec a'
     };
-    for(let opcode in incOpcodes) {
+    for(let opcode in decOpcodes) {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
-      expect(disasm.disassemble()).to.equal(`0x0100    ${incOpcodes[opcode]}`);
+      expect(disasm.disassemble()).to.equal(`0x0100    ${decOpcodes[opcode]}`);
     }
+  });
+
+  it('should disassemble add', () => {
+    const addOpcodes = {
+      0x09: 'add hl,bc',
+      0x19: 'add hl,de',
+      0x29: 'add hl,hl',
+      0x39: 'add hl,sp',
+      0x80: 'add a,b',
+      0x81: 'add a,c',
+      0x82: 'add a,d',
+      0x83: 'add a,e',
+      0x84: 'add a,h',
+      0x85: 'add a,l',
+      0x86: 'add a,(hl)',
+      0x87: 'add a,a'
+    };
+    for(let opcode in addOpcodes) {
+      disasm.setUint8Array(new Uint8Array([].concat(opcode)));
+      expect(disasm.disassemble()).to.equal(`0x0100    ${addOpcodes[opcode]}`);
+    }
+    disasm.setUint8Array(new Uint8Array([0xc6,0xff]));
+    expect(disasm.disassemble()).to.equal(`0x0100    add a,#0xff`);
   });
 });

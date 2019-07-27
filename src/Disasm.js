@@ -2,33 +2,46 @@
 const START_ADDR = 0x100;
 
 const OPCODE_TABLE = {
-  0x00: 'nop',
-  0x03: 'inc bc',
-  0x04: 'inc b',
-  0x05: 'dec b',
+  0x00: {mnemonic: 'nop', size: 1},
+  0x03: {mnemonic: 'inc bc', size: 1},
+  0x04: {mnemonic: 'inc b', size: 1},
+  0x05: {mnemonic: 'dec b', size: 1},
   0x08: null,
-  0x0b: 'dec bc',
-  0x0c: 'inc c',
-  0x0d: 'dec c',
-  0x13: 'inc de',
-  0x14: 'inc d',
-  0x15: 'dec d',
-  0x1b: 'dec de',
-  0x1c: 'inc e',
-  0x1d: 'dec e',
-  0x23: 'inc hl',
-  0x24: 'inc h',
-  0x25: 'dec h',
+  0x09: {mnemonic: 'add hl,bc', size: 1},
+  0x0b: {mnemonic: 'dec bc', size: 1},
+  0x0c: {mnemonic: 'inc c', size: 1},
+  0x0d: {mnemonic: 'dec c', size: 1},
+  0x13: {mnemonic: 'inc de', size: 1},
+  0x14: {mnemonic: 'inc d', size: 1},
+  0x15: {mnemonic: 'dec d', size: 1},
+  0x19: {mnemonic: 'add hl,de', size: 1},
+  0x1b: {mnemonic: 'dec de', size: 1},
+  0x1c: {mnemonic: 'inc e', size: 1},
+  0x1d: {mnemonic: 'dec e', size: 1},
+  0x23: {mnemonic: 'inc hl', size: 1},
+  0x24: {mnemonic: 'inc h', size: 1},
+  0x25: {mnemonic: 'dec h', size: 1},
   0x27: null,
-  0x2b: 'dec hl',
-  0x2c: 'inc l',
-  0x2d: 'dec l',
-  0x33: 'inc sp',
-  0x34: 'inc (hl)',
-  0x35: 'dec (hl)',
-  0x3b: 'dec sp',
-  0x3c: 'inc a',
-  0x3d: 'dec a',
+  0x29: {mnemonic: 'add hl,hl', size: 1},
+  0x2b: {mnemonic: 'dec hl', size: 1},
+  0x2c: {mnemonic: 'inc l', size: 1},
+  0x2d: {mnemonic: 'dec l', size: 1},
+  0x33: {mnemonic: 'inc sp', size: 1},
+  0x34: {mnemonic: 'inc (hl)', size: 1},
+  0x35: {mnemonic: 'dec (hl)', size: 1},
+  0x39: {mnemonic: 'add hl,sp', size: 1},
+  0x3b: {mnemonic: 'dec sp', size: 1},
+  0x3c: {mnemonic: 'inc a', size: 1},
+  0x3d: {mnemonic: 'dec a', size: 1},
+  0x80: {mnemonic: 'add a,b', size: 1},
+  0x81: {mnemonic: 'add a,c', size: 1},
+  0x82: {mnemonic: 'add a,d', size: 1},
+  0x83: {mnemonic: 'add a,e', size: 1},
+  0x84: {mnemonic: 'add a,h', size: 1},
+  0x85: {mnemonic: 'add a,l', size: 1},
+  0x86: {mnemonic: 'add a,(hl)', size: 1},
+  0x87: {mnemonic: 'add a,a', size: 1},
+  0xc6: {mnemonic: `add a,*`, size: 2},
   0xcb: null,
   0xd7: null,
   0xd9: null,
@@ -62,6 +75,8 @@ class Disasm {
     this.map = {};
     /** @type number */
     this.addr = START_ADDR;
+    /** @type number */
+    this.nextByte = 0;
   }
 
   /**
@@ -82,21 +97,47 @@ class Disasm {
   disassemble() {
     if (this.input == null) return 'No input stream';
 
+    this.reset_();
     const queue = [];
-    let nextByte = 0;
-    queue.push(this.input[nextByte]);
+    queue.push(this.readByte_());
 
     while (queue.length !== 0) {
       const byte = queue.shift();
       if (OPCODE_TABLE[byte] === null) {
         return Disasm.unsupported_(byte);
       }
-      this.map[this.addr] = OPCODE_TABLE[byte];
-      if (++nextByte < this.input.length) {
-        queue.push(this.input[nextByte]);
+
+      const opcodeObj = OPCODE_TABLE[byte];
+      let mnemonic = opcodeObj.mnemonic;
+      if (opcodeObj.size === 3) {
+        // TODO
+      } else if (opcodeObj.size === 2) {
+        mnemonic = mnemonic.replace('*',
+          `#${Disasm.toByteString(`${this.readByte_()}`)}`);
+      }
+      this.map[this.addr] = mnemonic;
+
+      if (this.nextByte < this.input.length) {
+        queue.push(this.readByte_());
       }
     }
     return this.buildOutput_();
+  }
+
+  /** @private */
+  reset_() {
+    this.map = {};
+    this.nextByte = 0;
+    this.addr = START_ADDR;
+  }
+
+  /**
+   * @return {number} next input byte
+   * @private
+   */
+  readByte_() {
+    if (this.nextByte === this.input.length) throw new Error('EOF');
+    return this.input[this.nextByte++];
   }
 
   /**
