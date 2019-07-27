@@ -187,4 +187,22 @@ describe('Opcodes', () => {
           .equal(`0x0100    ${ldTwoBytesOpcodes[opcode].replace('*','#0xff')}`);
     });
   });
+
+  it('should disassemble ld with 3-byte instructions', () => {
+    const ldThreeBytesOpcodes = {
+      0x01: 'ld bc,**',
+      0x11: 'ld de,**',
+      0x21: 'ld hl,**',
+      0x22: 'ld (**),hl',
+      0x2a: 'ld hl,(**)',
+      0x31: 'ld sp,**',
+      0x32: 'ld (**),a',
+      0x3a: 'ld a,(**)'
+    };
+    Object.keys(ldThreeBytesOpcodes).forEach((opcode) => {
+      disasm.setUint8Array(new Uint8Array([opcode, 0xab, 0xcd]));
+      expect(disasm.disassemble()).to.equal(
+          `0x0100    ${ldThreeBytesOpcodes[opcode].replace('**','#0xcdab')}`);
+    });
+  });
 });

@@ -5,6 +5,7 @@ const START_ADDR = 0x100;
 
 const OPCODE_TABLE = {
   0x00: {mnemonic: 'nop', size: 1},
+  0x01: {mnemonic: 'ld bc,**', size: 3},
   0x02: {mnemonic: 'ld (bc),a', size: 1},
   0x03: {mnemonic: 'inc bc', size: 1},
   0x04: {mnemonic: 'inc b', size: 1},
@@ -17,6 +18,7 @@ const OPCODE_TABLE = {
   0x0c: {mnemonic: 'inc c', size: 1},
   0x0d: {mnemonic: 'dec c', size: 1},
   0x0e: {mnemonic: 'ld c,*', size: 2},
+  0x11: {mnemonic: 'ld de,**', size: 3},
   0x12: {mnemonic: 'ld (de),a', size: 1},
   0x13: {mnemonic: 'inc de', size: 1},
   0x14: {mnemonic: 'inc d', size: 1},
@@ -28,21 +30,27 @@ const OPCODE_TABLE = {
   0x1c: {mnemonic: 'inc e', size: 1},
   0x1d: {mnemonic: 'dec e', size: 1},
   0x1e: {mnemonic: 'ld e,*', size: 2},
+  0x21: {mnemonic: 'ld hl,**', size: 3},
+  0x22: {mnemonic: 'ld (**),hl', size: 3},
   0x23: {mnemonic: 'inc hl', size: 1},
   0x24: {mnemonic: 'inc h', size: 1},
   0x25: {mnemonic: 'dec h', size: 1},
   0x26: {mnemonic: 'ld h,*', size: 2},
   0x27: null,
   0x29: {mnemonic: 'add hl,hl', size: 1},
+  0x2a: {mnemonic: 'ld hl,(**)', size: 3},
   0x2b: {mnemonic: 'dec hl', size: 1},
   0x2c: {mnemonic: 'inc l', size: 1},
   0x2d: {mnemonic: 'dec l', size: 1},
   0x2e: {mnemonic: 'ld l,*', size: 2},
+  0x31: {mnemonic: 'ld sp,**', size: 3},
+  0x32: {mnemonic: 'ld (**),a', size: 3},
   0x33: {mnemonic: 'inc sp', size: 1},
   0x34: {mnemonic: 'inc (hl)', size: 1},
   0x35: {mnemonic: 'dec (hl)', size: 1},
   0x36: {mnemonic: 'ld (hl),*', size: 2},
   0x39: {mnemonic: 'add hl,sp', size: 1},
+  0x3a: {mnemonic: 'ld a,(**)', size: 3},
   0x3b: {mnemonic: 'dec sp', size: 1},
   0x3c: {mnemonic: 'inc a', size: 1},
   0x3d: {mnemonic: 'dec a', size: 1},
@@ -159,11 +167,23 @@ class Disasm {
 
   /**
    * @param {string} decimal
-   * @return {string} hex address 0x00 to 0xff
+   * @return {string} hex value 0x00 to 0xff
    */
   static toByteString(decimal) {
     const hex = parseInt(decimal).toString(16);
     return `0x${'00'.substr(0, 2 - hex.length)}${hex}`;
+  }
+
+  /**
+   * @param {string} decimal1
+   * @param {string} decimal2
+   * @return {string} little endian hex value 0x0000 to 0xffff
+   */
+  static toWordString(decimal1, decimal2) {
+      const hex1 = parseInt(decimal1).toString(16);
+      const hex2 = parseInt(decimal2).toString(16);
+      return '0x' + '00'.substr(0, 2 - hex2.length) + hex2 +
+          '00'.substr(0, 2 - hex1.length) + hex1;
   }
 
   /** @param {Uint8Array} uint8array */
@@ -189,9 +209,13 @@ class Disasm {
 
       const opcodeObj = OPCODE_TABLE[byte];
       let mnemonic = opcodeObj.mnemonic;
-      if (opcodeObj.size === 2) {
-        mnemonic = mnemonic.replace('*',
-          `#${Disasm.toByteString(`${this.readByte_()}`)}`);
+      if (opcodeObj.size === 3) {
+          mnemonic = mnemonic.replace('**',
+              `#${Disasm.toWordString(
+                  `${this.readByte_()}`, `${this.readByte_()}`)}`);
+      } else if (opcodeObj.size === 2) {
+          mnemonic = mnemonic.replace('*',
+              `#${Disasm.toByteString(`${this.readByte_()}`)}`);
       }
       this.map[this.addr] = mnemonic;
 
