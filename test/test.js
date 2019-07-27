@@ -46,4 +46,25 @@ describe('Opcodes', () => {
         .equal(`e-Reader unsupported opcode: ${Disasm.toByteString(opcode)}`);
     });
   });
+
+  it('should disassemble dec', () => {
+    const incOpcodes = {
+      0x05: 'dec b',
+      0x0b: 'dec bc',
+      0x0d: 'dec c',
+      0x15: 'dec d',
+      0x1b: 'dec de',
+      0x1d: 'dec e',
+      0x25: 'dec h',
+      0x2b: 'dec hl',
+      0x2d: 'dec l',
+      0x35: 'dec (hl)',
+      0x3b: 'dec sp',
+      0x3d: 'dec a'
+    };
+    for(let opcode in incOpcodes) {
+      disasm.setUint8Array(new Uint8Array([].concat(opcode)));
+      expect(disasm.disassemble()).to.equal(`0x0100    ${incOpcodes[opcode]}`);
+    }
+  });
 });
