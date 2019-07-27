@@ -3,7 +3,7 @@ import {describe, beforeEach} from 'mocha';
 import Disasm from '../src/Disasm';
 
 describe('Opcodes', () => {
-
+  'use strict';
   let disasm;
 
   beforeEach('', () => {
@@ -30,10 +30,10 @@ describe('Opcodes', () => {
       0x34: 'inc (hl)',
       0x3c: 'inc a'
     };
-    for(let opcode in incOpcodes) {
+    Object.keys(incOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to.equal(`0x0100    ${incOpcodes[opcode]}`);
-    }
+    });
   });
 
   it('should detect unsupported opcodes', () => {
@@ -62,14 +62,14 @@ describe('Opcodes', () => {
       0x3b: 'dec sp',
       0x3d: 'dec a'
     };
-    for(let opcode in decOpcodes) {
+    Object.keys(decOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to.equal(`0x0100    ${decOpcodes[opcode]}`);
-    }
+    });
   });
 
   it('should disassemble add', () => {
-    const addOpcodes = {
+    const addOneByteOpcodes = {
       0x09: 'add hl,bc',
       0x19: 'add hl,de',
       0x29: 'add hl,hl',
@@ -83,10 +83,11 @@ describe('Opcodes', () => {
       0x86: 'add a,(hl)',
       0x87: 'add a,a'
     };
-    for(let opcode in addOpcodes) {
+    Object.keys(addOneByteOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
-      expect(disasm.disassemble()).to.equal(`0x0100    ${addOpcodes[opcode]}`);
-    }
+      expect(disasm.disassemble()).to
+          .equal(`0x0100    ${addOneByteOpcodes[opcode]}`);
+    });
     disasm.setUint8Array(new Uint8Array([0xc6,0xff]));
     expect(disasm.disassemble()).to.equal(`0x0100    add a,#0xff`);
   });
@@ -162,11 +163,11 @@ describe('Opcodes', () => {
       0x7f: 'ld a,a',
       0xf9: 'ld sp,hl'
     };
-    for(let opcode in ldOneByteOpcodes) {
+    Object.keys(ldOneByteOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
           .equal(`0x0100    ${ldOneByteOpcodes[opcode]}`);
-    }
+    });
   });
 
   it('should disassemble ld with 2-byte instructions', () => {
@@ -180,10 +181,10 @@ describe('Opcodes', () => {
       0x36: 'ld (hl),*',
       0x3e: 'ld a,*'
     };
-    for(let opcode in ldTwoBytesOpcodes) {
+    Object.keys(ldTwoBytesOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([opcode, 0xff]));
       expect(disasm.disassemble()).to
           .equal(`0x0100    ${ldTwoBytesOpcodes[opcode].replace('*','#0xff')}`);
-    }
+    });
   });
 });

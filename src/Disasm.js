@@ -1,3 +1,5 @@
+/* jshint node: true */
+
 /** @type {number} start program address */
 const START_ADDR = 0x100;
 
@@ -171,7 +173,9 @@ class Disasm {
 
   /** @return {string} disassembled binary */
   disassemble() {
-    if (this.input == null) return 'No input stream';
+    if (this.input === null) {
+      return 'No input stream';
+    }
 
     this.reset_();
     const queue = [];
@@ -185,9 +189,7 @@ class Disasm {
 
       const opcodeObj = OPCODE_TABLE[byte];
       let mnemonic = opcodeObj.mnemonic;
-      if (opcodeObj.size === 3) {
-        // TODO
-      } else if (opcodeObj.size === 2) {
+      if (opcodeObj.size === 2) {
         mnemonic = mnemonic.replace('*',
           `#${Disasm.toByteString(`${this.readByte_()}`)}`);
       }
@@ -212,7 +214,9 @@ class Disasm {
    * @private
    */
   readByte_() {
-    if (this.nextByte === this.input.length) throw new Error('EOF');
+    if (this.nextByte === this.input.length) {
+      throw new Error('EOF');
+    }
     return this.input[this.nextByte++];
   }
 
