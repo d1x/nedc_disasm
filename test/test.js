@@ -356,8 +356,8 @@ describe('Opcodes', () => {
     });
   });
 
-  it('should disassemble ret', () => {
-    const opcodes = {
+  it('should disassemble call and ret', () => {
+    const retOpcodes = {
       0xc0: 'ret nz',
       0xc8: 'ret z',
       0xc9: 'ret',
@@ -366,9 +366,21 @@ describe('Opcodes', () => {
       0xf0: 'ret p',
       0xf8: 'ret m',
     };
-    Object.keys(opcodes).forEach((opcode) => {
+    const callOpcodes = {
+      0xc4: 'call nz,**',
+      0xcc: 'call z,**',
+      0xcd: 'call **',
+      0xd4: 'call nc,**',
+      0xdc: 'call c,**',
+    };
+    Object.keys(retOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
-      expect(disasm.disassemble()).to.equal(`0x0100    ${opcodes[opcode]}`);
+      expect(disasm.disassemble()).to.equal(`0x0100    ${retOpcodes[opcode]}`);
+    });
+    Object.keys(callOpcodes).forEach((opcode) => {
+      disasm.setUint8Array(new Uint8Array([opcode, 0xab, 0xdc,]));
+      expect(disasm.disassemble()).to
+          .equal(`0x0100    ${callOpcodes[opcode].replace('**', '#0xdcab')}`);
     });
   });
 });
