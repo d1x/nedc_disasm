@@ -92,6 +92,26 @@ describe('Opcodes', () => {
     expect(disasm.disassemble()).to.equal(`0x0100    add a,#0xff`);
   });
 
+  it('should disassemble adc', () => {
+    const adcOneByteOpcodes = {
+      0x88: 'adc a,b',
+      0x89: 'adc a,c',
+      0x8a: 'adc a,d',
+      0x8b: 'adc a,e',
+      0x8c: 'adc a,h',
+      0x8d: 'adc a,l',
+      0x8e: 'adc a,(hl)',
+      0x8f: 'adc a,a',
+    };
+    Object.keys(adcOneByteOpcodes).forEach((opcode) => {
+      disasm.setUint8Array(new Uint8Array([].concat(opcode)));
+      expect(disasm.disassemble()).to
+          .equal(`0x0100    ${adcOneByteOpcodes[opcode]}`);
+    });
+    disasm.setUint8Array(new Uint8Array([0xce,0xff]));
+    expect(disasm.disassemble()).to.equal(`0x0100    adc a,#0xff`);
+  });
+
   it('should disassemble ld with 1-byte instructions', () => {
     const ldOneByteOpcodes = {
       0x02: 'ld (bc),a',
@@ -217,6 +237,19 @@ describe('Opcodes', () => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
           .equal(`0x0100    ${shiftOpcodes[opcode]}`);
+    });
+  });
+
+  it('should disassemble invert and flag operations', () => {
+    const opcodes = {
+      0x2f: 'cpl',
+      0x37: 'scf',
+      0x3f: 'ccf'
+    };
+    Object.keys(opcodes).forEach((opcode) => {
+      disasm.setUint8Array(new Uint8Array([].concat(opcode)));
+      expect(disasm.disassemble()).to
+          .equal(`0x0100    ${opcodes[opcode]}`);
     });
   });
 });
