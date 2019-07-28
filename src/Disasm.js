@@ -194,11 +194,13 @@ const OPCODE_TABLE = {
   0xc4: {mnemonic: 'call nz,**', size: 3,},
   0xc5: {mnemonic: 'push bc', size: 1,},
   0xc6: {mnemonic: `add a,*`, size: 2,},
+  0xc7: {mnemonic: `rst 0x00`, size: 1,},
   0xc8: {mnemonic: 'ret z', size: 1,},
   0xc9: {mnemonic: 'ret', size: 1,},
   0xcb: null,
   0xcc: {mnemonic: 'call z,**', size: 3,},
   0xcd: {mnemonic: 'call **', size: 3,},
+  0xcf: {mnemonic: 'rst 0x08', size: 1,},
   0xd0: {mnemonic: 'ret nc', size: 1,},
   0xd1: {mnemonic: 'pop de', size: 1,},
   0xd4: {mnemonic: 'call nc,**', size: 3,},
@@ -300,20 +302,45 @@ class Disasm {
       const opcodeObj = OPCODE_TABLE[byte];
       let mnemonic = opcodeObj.mnemonic;
       if (opcodeObj.size === 3) {
-          mnemonic = mnemonic.replace('**',
-              `#${Disasm.toWordString(
-                  `${this.readByte_()}`, `${this.readByte_()}`)}`);
+        mnemonic = mnemonic.replace('**',
+          `#${Disasm.toWordString(
+            `${this.readByte_()}`, `${this.readByte_()}`)}`);
       } else if (opcodeObj.size === 2) {
-          mnemonic = mnemonic.replace('*',
-              `#${Disasm.toByteString(`${this.readByte_()}`)}`);
+        mnemonic = mnemonic.replace('*',
+          `#${Disasm.toByteString(`${this.readByte_()}`)}`);
       }
-      this.map[this.addr] = mnemonic;
+
+      this.map[this.addr++] = mnemonic;
+      if (mnemonic.startsWith('rst')) {
+        this.handleApiCall_();
+      }
 
       if (this.nextByte < this.input.length) {
         queue.push(this.readByte_());
       }
     }
     return this.buildOutput_();
+  }
+
+  /** @private */
+  handleApiCall_() {
+    this.map[this.addr] =
+      `.db ${Disasm.toByteString(`${this.readByte_()}`)}`;
+    this.commentLine_(this.addr, 'API call');
+    this.addr++;
+  }
+
+  /**
+   * @param {number} addr
+   * @param {string} comment
+   * @private
+   */
+  commentLine_(addr, comment) {
+    const commentStart = 20;
+    const line = this.map[addr];
+    this.map[addr] =
+      `${line}${' '.repeat(commentStart)
+        .substr(0, commentStart - line.length)}; ${comment}`;
   }
 
   /** @private */
