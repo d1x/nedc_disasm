@@ -152,6 +152,50 @@ describe('Opcodes', () => {
     expect(disasm.disassemble()).to.equal(`0x0100    sbc a,#0xff`);
   });
 
+  it('should disassemble bit operations', () => {
+    const oneByteOpcodes = {
+      0xa0: 'and b',
+      0xa1: 'and c',
+      0xa2: 'and d',
+      0xa3: 'and e',
+      0xa4: 'and h',
+      0xa5: 'and l',
+      0xa6: 'and (hl)',
+      0xa7: 'and a',
+      0xa8: 'xor b',
+      0xa9: 'xor c',
+      0xaa: 'xor d',
+      0xab: 'xor e',
+      0xac: 'xor h',
+      0xad: 'xor l',
+      0xae: 'xor (hl)',
+      0xaf: 'xor a',
+      0xb0: 'or b',
+      0xb1: 'or c',
+      0xb2: 'or d',
+      0xb3: 'or e',
+      0xb4: 'or h',
+      0xb5: 'or l',
+      0xb6: 'or (hl)',
+      0xb7: 'or a',
+    };
+    const twoByteOpcodes = {
+      0xe6: 'and *',
+      0xee: 'xor *',
+      0xf6: 'or *',
+    };
+    Object.keys(oneByteOpcodes).forEach((opcode) => {
+      disasm.setUint8Array(new Uint8Array([].concat(opcode)));
+      expect(disasm.disassemble()).to
+          .equal(`0x0100    ${oneByteOpcodes[opcode]}`);
+    });
+    Object.keys(twoByteOpcodes).forEach((opcode) => {
+      disasm.setUint8Array(new Uint8Array([opcode, 0xff,]));
+      expect(disasm.disassemble()).to
+          .equal(`0x0100    ${twoByteOpcodes[opcode].replace('*', '#0xff')}`);
+    });
+  });
+
   it('should disassemble ld with 1-byte instructions', () => {
     const ldOneByteOpcodes = {
       0x02: 'ld (bc),a',
