@@ -352,8 +352,23 @@ describe('Opcodes', () => {
     };
     Object.keys(opcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
-      expect(disasm.disassemble()).to
-          .equal(`0x0100    ${opcodes[opcode]}`);
+      expect(disasm.disassemble()).to.equal(`0x0100    ${opcodes[opcode]}`);
+    });
+  });
+
+  it('should disassemble ret', () => {
+    const opcodes = {
+      0xc0: 'ret nz',
+      0xc8: 'ret z',
+      0xc9: 'ret',
+      0xd0: 'ret nc',
+      0xd8: 'ret c',
+      0xf0: 'ret p',
+      0xf8: 'ret m',
+    };
+    Object.keys(opcodes).forEach((opcode) => {
+      disasm.setUint8Array(new Uint8Array([].concat(opcode)));
+      expect(disasm.disassemble()).to.equal(`0x0100    ${opcodes[opcode]}`);
     });
   });
 });
