@@ -412,6 +412,7 @@ describe('Opcodes', () => {
     };
     const threeBytesOpcodes = {
       0xc2: 'jp nz,**',
+      0xc3: 'jp **',
       0xca: 'jp z,**',
       0xd2: 'jp nc,**',
       0xda: 'jp c,**',

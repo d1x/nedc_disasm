@@ -199,6 +199,7 @@ const OPCODE_TABLE = {
   0xc0: {mnemonic: 'ret nz', size: 1,},
   0xc1: {mnemonic: 'pop bc', size: 1,},
   0xc2: {mnemonic: 'jp nz,**', size: 3,},
+  0xc3: {mnemonic: 'jp **', size: 3,},
   0xc4: {mnemonic: 'call nz,**', size: 3,},
   0xc5: {mnemonic: 'push bc', size: 1,},
   0xc6: {mnemonic: `add a,*`, size: 2,},
