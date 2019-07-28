@@ -205,4 +205,18 @@ describe('Opcodes', () => {
           `0x0100    ${ldThreeBytesOpcodes[opcode].replace('**','#0xcdab')}`);
     });
   });
+
+  it('should disassemble shift operations', () => {
+    const shiftOpcodes = {
+      0x07: 'rlca',
+      0x0f: 'rrca',
+      0x17: 'rla',
+      0x1f: 'rra'
+    };
+    Object.keys(shiftOpcodes).forEach((opcode) => {
+      disasm.setUint8Array(new Uint8Array([].concat(opcode)));
+      expect(disasm.disassemble()).to
+          .equal(`0x0100    ${shiftOpcodes[opcode]}`);
+    });
+  });
 });
