@@ -420,4 +420,12 @@ describe('Opcodes', () => {
     disasm.setUint8Array(new Uint8Array([0xeb,]));
     expect(disasm.disassemble()).to.equal('0x0100    ex de,hl');
   });
+
+  it('should disassemble wait', () => {
+    disasm.setUint8Array(new Uint8Array([0x76,]));
+    expect(disasm.disassemble()).to.equal('0x0100    wait a');
+
+    disasm.setUint8Array(new Uint8Array([0xd3, 0xff,]));
+    expect(disasm.disassemble()).to.equal('0x0100    wait #0xff');
+  });
 });
