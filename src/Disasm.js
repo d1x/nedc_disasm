@@ -181,6 +181,14 @@ const OPCODE_TABLE = {
   0xb5: {mnemonic: 'or l', size: 1,},
   0xb6: {mnemonic: 'or (hl)', size: 1,},
   0xb7: {mnemonic: 'or a', size: 1,},
+  0xb8: {mnemonic: 'cp b', size: 1,},
+  0xb9: {mnemonic: 'cp c', size: 1,},
+  0xba: {mnemonic: 'cp d', size: 1,},
+  0xbb: {mnemonic: 'cp e', size: 1,},
+  0xbc: {mnemonic: 'cp h', size: 1,},
+  0xbd: {mnemonic: 'cp l', size: 1,},
+  0xbe: {mnemonic: 'cp (hl)', size: 1,},
+  0xbf: {mnemonic: 'cp a', size: 1,},
   0xc6: {mnemonic: `add a,*`, size: 2,},
   0xcb: null,
   0xd7: null,
@@ -210,6 +218,7 @@ const OPCODE_TABLE = {
   0xfb: null,
   0xfc: null,
   0xfd: null,
+  0xfe: {mnemonic: 'cp *', size: 2,},
   0xff: null,
 };
 

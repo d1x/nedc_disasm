@@ -196,6 +196,26 @@ describe('Opcodes', () => {
     });
   });
 
+  it('should disassemble cp', () => {
+    const opcodes = {
+      0xb8: 'cp b',
+      0xb9: 'cp c',
+      0xba: 'cp d',
+      0xbb: 'cp e',
+      0xbc: 'cp h',
+      0xbd: 'cp l',
+      0xbe: 'cp (hl)',
+      0xbf: 'cp a',
+    };
+    Object.keys(opcodes).forEach((opcode) => {
+      disasm.setUint8Array(new Uint8Array([].concat(opcode)));
+      expect(disasm.disassemble()).to
+          .equal(`0x0100    ${opcodes[opcode]}`);
+    });
+    disasm.setUint8Array(new Uint8Array([0xfe,0xff,]));
+    expect(disasm.disassemble()).to.equal(`0x0100    cp #0xff`);
+  });
+
   it('should disassemble ld with 1-byte instructions', () => {
     const ldOneByteOpcodes = {
       0x02: 'ld (bc),a',
