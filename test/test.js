@@ -401,6 +401,38 @@ describe('Opcodes', () => {
     });
   });
 
+  it('should disassemble jumps', () => {
+    const twoByteOpcodes = {
+      0x10: 'djnz *',
+      0x18: 'jr *',
+      0x20: 'jr nz,*',
+      0x28: 'jr z,*',
+      0x30: 'jr nc,*',
+      0x38: 'jr c,*',
+    };
+    const threeBytesOpcodes = {
+      0xc2: 'jp nz,**',
+      0xca: 'jp z,**',
+      0xd2: 'jp nc,**',
+      0xda: 'jp c,**',
+      0xf2: 'jp p,**',
+      0xfa: 'jp m,**',
+    };
+    disasm.setUint8Array(new Uint8Array([0xe9,]));
+    expect(disasm.disassemble()).to.equal('0x0100    jp (hl)');
+
+    Object.entries(twoByteOpcodes).forEach(([opcode, mnemonic]) => {
+      disasm.setUint8Array(new Uint8Array([opcode, 0xff,]));
+      expect(disasm.disassemble()).to.equal(
+        `0x0100    ${mnemonic.replace('*', '#0xff')}`);
+    });
+    Object.entries(threeBytesOpcodes).forEach(([opcode, mnemonic]) => {
+      disasm.setUint8Array(new Uint8Array([opcode, 0xab, 0xcd,]));
+      expect(disasm.disassemble()).to.equal(
+        `0x0100    ${mnemonic.replace('**', '#0xcdab')}`);
+    });
+  });
+
   it('should disassemble rst, or API calls', () => {
     disasm.setUint8Array(new Uint8Array([0xc7, 0xff,]));
     expect(disasm.disassemble()).to.equal(
