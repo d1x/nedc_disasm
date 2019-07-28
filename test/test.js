@@ -112,6 +112,26 @@ describe('Opcodes', () => {
     expect(disasm.disassemble()).to.equal(`0x0100    adc a,#0xff`);
   });
 
+  it('should disassemble sub', () => {
+    const subOneByteOpcodes = {
+      0x90: 'sub b',
+      0x91: 'sub c',
+      0x92: 'sub d',
+      0x93: 'sub e',
+      0x94: 'sub h',
+      0x95: 'sub l',
+      0x96: 'sub (hl)',
+      0x97: 'sub a',
+    };
+    Object.keys(subOneByteOpcodes).forEach((opcode) => {
+      disasm.setUint8Array(new Uint8Array([].concat(opcode)));
+      expect(disasm.disassemble()).to
+          .equal(`0x0100    ${subOneByteOpcodes[opcode]}`);
+    });
+    disasm.setUint8Array(new Uint8Array([0xd6,0xff,]));
+    expect(disasm.disassemble()).to.equal(`0x0100    sub #0xff`);
+  });
+
   it('should disassemble ld with 1-byte instructions', () => {
     const ldOneByteOpcodes = {
       0x02: 'ld (bc),a',
