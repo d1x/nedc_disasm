@@ -383,4 +383,21 @@ describe('Opcodes', () => {
           .equal(`0x0100    ${callOpcodes[opcode].replace('**', '#0xdcab')}`);
     });
   });
+
+  it('should disassemble stack operations', () => {
+    const opcodes = {
+      0xc1: 'pop bc',
+      0xc5: 'push bc',
+      0xd1: 'pop de',
+      0xd5: 'push de',
+      0xe1: 'pop hl',
+      0xe5: 'push hl',
+      0xf1: 'pop af',
+      0xf5: 'push af',
+    };
+    Object.entries(opcodes).forEach(([opcode, mnemonic]) => {
+      disasm.setUint8Array(new Uint8Array([].concat(opcode)));
+      expect(disasm.disassemble()).to.equal(`0x0100    ${mnemonic}`);
+    });
+  });
 });
