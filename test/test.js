@@ -11,7 +11,7 @@ describe('Opcodes', () => {
   });
 
   it('should disassemble nop', () => {
-    disasm.setUint8Array(new Uint8Array([0x00]));
+    disasm.setUint8Array(new Uint8Array([0x00,]));
     expect(disasm.disassemble()).to.equal('0x0100    nop');
   });
 
@@ -28,7 +28,7 @@ describe('Opcodes', () => {
       0x2c: 'inc l',
       0x33: 'inc sp',
       0x34: 'inc (hl)',
-      0x3c: 'inc a'
+      0x3c: 'inc a',
     };
     Object.keys(incOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
@@ -39,7 +39,7 @@ describe('Opcodes', () => {
   it('should detect unsupported opcodes', () => {
     const unsupportedOpcodes = [0x08, 0x27, 0xcb, 0xd7, 0xd9, 0xdb, 0xdd, 0xdf,
       0xe0, 0xe2, 0xe4, 0xe7, 0xe8, 0xea, 0xec, 0xed, 0xef, 0xf3, 0xf4, 0xf7,
-      0xfb, 0xfc, 0xfd, 0xff];
+      0xfb, 0xfc, 0xfd, 0xff,];
     unsupportedOpcodes.forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
@@ -60,7 +60,7 @@ describe('Opcodes', () => {
       0x2d: 'dec l',
       0x35: 'dec (hl)',
       0x3b: 'dec sp',
-      0x3d: 'dec a'
+      0x3d: 'dec a',
     };
     Object.keys(decOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
@@ -81,14 +81,14 @@ describe('Opcodes', () => {
       0x84: 'add a,h',
       0x85: 'add a,l',
       0x86: 'add a,(hl)',
-      0x87: 'add a,a'
+      0x87: 'add a,a',
     };
     Object.keys(addOneByteOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
           .equal(`0x0100    ${addOneByteOpcodes[opcode]}`);
     });
-    disasm.setUint8Array(new Uint8Array([0xc6,0xff]));
+    disasm.setUint8Array(new Uint8Array([0xc6,0xff,]));
     expect(disasm.disassemble()).to.equal(`0x0100    add a,#0xff`);
   });
 
@@ -108,7 +108,7 @@ describe('Opcodes', () => {
       expect(disasm.disassemble()).to
           .equal(`0x0100    ${adcOneByteOpcodes[opcode]}`);
     });
-    disasm.setUint8Array(new Uint8Array([0xce,0xff]));
+    disasm.setUint8Array(new Uint8Array([0xce,0xff,]));
     expect(disasm.disassemble()).to.equal(`0x0100    adc a,#0xff`);
   });
 
@@ -181,7 +181,7 @@ describe('Opcodes', () => {
       0x7d: 'ld a,l',
       0x7e: 'ld a,(hl)',
       0x7f: 'ld a,a',
-      0xf9: 'ld sp,hl'
+      0xf9: 'ld sp,hl',
     };
     Object.keys(ldOneByteOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
@@ -199,10 +199,10 @@ describe('Opcodes', () => {
       0x26: 'ld h,*',
       0x2e: 'ld l,*',
       0x36: 'ld (hl),*',
-      0x3e: 'ld a,*'
+      0x3e: 'ld a,*',
     };
     Object.keys(ldTwoBytesOpcodes).forEach((opcode) => {
-      disasm.setUint8Array(new Uint8Array([opcode, 0xff]));
+      disasm.setUint8Array(new Uint8Array([opcode, 0xff,]));
       expect(disasm.disassemble()).to
           .equal(`0x0100    ${ldTwoBytesOpcodes[opcode].replace('*','#0xff')}`);
     });
@@ -217,10 +217,10 @@ describe('Opcodes', () => {
       0x2a: 'ld hl,(**)',
       0x31: 'ld sp,**',
       0x32: 'ld (**),a',
-      0x3a: 'ld a,(**)'
+      0x3a: 'ld a,(**)',
     };
     Object.keys(ldThreeBytesOpcodes).forEach((opcode) => {
-      disasm.setUint8Array(new Uint8Array([opcode, 0xab, 0xcd]));
+      disasm.setUint8Array(new Uint8Array([opcode, 0xab, 0xcd,]));
       expect(disasm.disassemble()).to.equal(
           `0x0100    ${ldThreeBytesOpcodes[opcode].replace('**','#0xcdab')}`);
     });
@@ -231,7 +231,7 @@ describe('Opcodes', () => {
       0x07: 'rlca',
       0x0f: 'rrca',
       0x17: 'rla',
-      0x1f: 'rra'
+      0x1f: 'rra',
     };
     Object.keys(shiftOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
@@ -244,7 +244,7 @@ describe('Opcodes', () => {
     const opcodes = {
       0x2f: 'cpl',
       0x37: 'scf',
-      0x3f: 'ccf'
+      0x3f: 'ccf',
     };
     Object.keys(opcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
