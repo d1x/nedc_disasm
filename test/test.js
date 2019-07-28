@@ -412,4 +412,12 @@ describe('Opcodes', () => {
         '0x0100    rst 0x08\n' +
         '0x0101    .db 0xff            ; API call');
   });
+
+  it('should disassemble ex', () => {
+    disasm.setUint8Array(new Uint8Array([0xe3,]));
+    expect(disasm.disassemble()).to.equal('0x0100    ex (sp),hl');
+
+    disasm.setUint8Array(new Uint8Array([0xeb,]));
+    expect(disasm.disassemble()).to.equal('0x0100    ex de,hl');
+  });
 });
