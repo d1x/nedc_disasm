@@ -267,12 +267,7 @@ class Disasm {
   constructor() {
     /** @type Object */
     this.input = null;
-    /** @type Object<number,string> */
-    this.map = {};
-    /** @type number */
-    this.addr = START_ADDR;
-    /** @type number */
-    this.nextByte = 0;
+    this.reset_();
   }
 
   /**
@@ -309,25 +304,34 @@ class Disasm {
 
     this.reset_();
     const queue = [];
-    queue.push(this.readByte_());
+    queue.push(this.readNextByte_());
 
     while (queue.length !== 0) {
       const opcode = queue.shift();
       if (OPCODE_TABLE[opcode] === null) {
         // Treat unsupported opcodes as data
         this.map[this.addr++] = `.db ${Disasm.toByteString(opcode)}`;
+        if (this.nextByte < this.input.length) {
+          queue.push(this.readNextByte_());
+        }
       } else {
         const opcodeObj = OPCODE_TABLE[opcode];
         let mnemonic = opcodeObj.mnemonic;
+        let param = null;
+        this.visited[this.addr] = true;
         if (opcodeObj.size === 3) {
+          this.visited[this.addr + 1] = true;
+          this.visited[this.addr + 2] = true;
           mnemonic = mnemonic.replace('**',
             `#${Disasm.toWordString(
-              `${this.readByte_()}`, `${this.readByte_()}`)}`);
+              `${this.readNextByte_()}`, `${this.readNextByte_()}`)}`);
           this.map[this.addr] = mnemonic;
           this.addr += 3;
         } else if (opcodeObj.size === 2) {
+          this.visited[this.addr + 1] = true;
+          param = this.readNextByte_();
           mnemonic = mnemonic.replace('*',
-            `#${Disasm.toByteString(`${this.readByte_()}`)}`);
+            `#${Disasm.toByteString(`${param}`)}`);
           this.map[this.addr] = mnemonic;
           this.addr += 2;
         } else { // opcodeObj.size == 1
@@ -335,12 +339,24 @@ class Disasm {
         }
 
         if (mnemonic.startsWith('rst')) {
+          this.visited[this.addr] = true;
           this.handleApiCall_();
         }
-      }
 
-      if (this.nextByte < this.input.length) {
-        queue.push(this.readByte_());
+        if (this.nextByte < this.input.length) {
+          if (mnemonic.startsWith('jr')) {
+            queue.push(this.readByte_(param));
+            this.addr += param;
+          } else {
+            queue.push(this.readNextByte_());
+          }
+        }
+      }
+    }
+
+    for(let i = 0; i < this.input.length; i++) {
+      if (!this.visited[i]) {
+        this.map[i] = `.db ${Disasm.toByteString(this.input[i])}`;
       }
     }
     return this.buildOutput_();
@@ -349,7 +365,7 @@ class Disasm {
   /** @private */
   handleApiCall_() {
     this.map[this.addr] =
-      `.db ${Disasm.toByteString(`${this.readByte_()}`)}`;
+      `.db ${Disasm.toByteString(`${this.readNextByte_()}`)}`;
     this.commentLine_(this.addr, 'API call');
     this.addr++;
   }
@@ -369,16 +385,36 @@ class Disasm {
 
   /** @private */
   reset_() {
+    /** @type Object<number,string|null> */
     this.map = {};
+    /** @type number */
+    this.addr = 0;
+    /** @type number */
     this.nextByte = 0;
-    this.addr = START_ADDR;
+    /** @type Array<boolean> */
+    this.visited = [];
+    if (this.input !== null) {
+      for (let i = 0; i < this.input.length; i++) {
+        this.visited[i] = false;
+      }
+    }
   }
 
   /**
    * @return {number} next input byte
    * @private
    */
-  readByte_() {
+  readNextByte_() {
+    return this.readByte_(0);
+  }
+
+  /**
+   * @param {number} offset (optional)
+   * @return {number} next input byte
+   * @private
+   */
+  readByte_(offset) {
+    this.nextByte += offset || 0;
     if (this.nextByte === this.input.length) {
       throw new Error('EOF');
     }
@@ -393,26 +429,18 @@ class Disasm {
     const output = [];
     const /** Array<string> */ lines = (Object.keys(this.map));
     lines.sort();
-    lines.forEach((line) =>
-      output.push(`${Disasm.toAddress_(line)}    ${this.map[line]}`));
+    lines.forEach((line) => output.push(
+      `${Disasm.toAddress_(parseInt(line)+ START_ADDR)}    ${this.map[line]}`));
     return output.join('\n');
   }
 
   /**
-   * @param {string} opcode
-   * @private
-   */
-  static unsupported_(opcode) {
-    return `e-Reader unsupported opcode: ${Disasm.toByteString(opcode)}`;
-  }
-
-  /**
-   * @param {string} decimal
+   * @param {number} decimal
    * @return {string} hex address 0x0000 to 0xffff
    * @private
    */
   static toAddress_(decimal) {
-    const hex = parseInt(decimal).toString(16);
+    const hex = decimal.toString(16);
     return `0x${'0000'.substr(0, 4 - hex.length)}${hex}`;
   }
 }

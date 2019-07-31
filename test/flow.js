@@ -63,4 +63,18 @@ describe('Program flow', () => {
       '0x0107    .db 0xff',]
       .join('\n'));
   });
+
+  it('should handle relative jumps', () => {
+    disasm.setUint8Array(new Uint8Array([
+      0x18, 0x03, /* jr #0x03 ; relative +3 */
+      0x01, 0x02, 0x03, /* data */
+      0x00, /* next pc */]));
+    expect(disasm.disassemble()).to.equal([
+      '0x0100    jr #0x03',
+      '0x0102    .db 0x01',
+      '0x0103    .db 0x02',
+      '0x0104    .db 0x03',
+      '0x0105    nop',
+    ].join('\n'));
+  });
 });
