@@ -314,23 +314,23 @@ class Disasm {
     while (queue.length !== 0) {
       const byte = queue.shift();
       if (OPCODE_TABLE[byte] === null) {
-        return Disasm.unsupported_(byte);
-      }
+        this.handleUnsupportedOpcode_(byte);
+      } else {
+        const opcodeObj = OPCODE_TABLE[byte];
+        let mnemonic = opcodeObj.mnemonic;
+        if (opcodeObj.size === 3) {
+          mnemonic = mnemonic.replace('**',
+            `#${Disasm.toWordString(
+              `${this.readByte_()}`, `${this.readByte_()}`)}`);
+        } else if (opcodeObj.size === 2) {
+          mnemonic = mnemonic.replace('*',
+            `#${Disasm.toByteString(`${this.readByte_()}`)}`);
+        }
 
-      const opcodeObj = OPCODE_TABLE[byte];
-      let mnemonic = opcodeObj.mnemonic;
-      if (opcodeObj.size === 3) {
-        mnemonic = mnemonic.replace('**',
-          `#${Disasm.toWordString(
-            `${this.readByte_()}`, `${this.readByte_()}`)}`);
-      } else if (opcodeObj.size === 2) {
-        mnemonic = mnemonic.replace('*',
-          `#${Disasm.toByteString(`${this.readByte_()}`)}`);
-      }
-
-      this.map[this.addr++] = mnemonic;
-      if (mnemonic.startsWith('rst')) {
-        this.handleApiCall_();
+        this.map[this.addr++] = mnemonic;
+        if (mnemonic.startsWith('rst')) {
+          this.handleApiCall_();
+        }
       }
 
       if (this.nextByte < this.input.length) {
@@ -338,6 +338,14 @@ class Disasm {
       }
     }
     return this.buildOutput_();
+  }
+
+  /**
+   * @param opcode
+   * @private
+   */
+  handleUnsupportedOpcode_(opcode) {
+    this.map[this.addr++] = `.db ${Disasm.toByteString(opcode)}`;
   }
 
   /** @private */

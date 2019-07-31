@@ -36,14 +36,14 @@ describe('Opcodes', () => {
     });
   });
 
-  it('should detect unsupported opcodes', () => {
+  it('should treat unsupported opcodes as data', () => {
     const unsupportedOpcodes = [0x08, 0x27, 0xcb, 0xd7, 0xd9, 0xdb, 0xdd, 0xdf,
       0xe0, 0xe2, 0xe4, 0xe7, 0xe8, 0xea, 0xec, 0xed, 0xef, 0xf3, 0xf4, 0xf7,
       0xfb, 0xfc, 0xfd, 0xff,];
     unsupportedOpcodes.forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
-        .equal(`e-Reader unsupported opcode: ${Disasm.toByteString(opcode)}`);
+        .equal(`0x0100    .db ${Disasm.toByteString(opcode)}`);
     });
   });
 
