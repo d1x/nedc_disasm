@@ -47,4 +47,20 @@ describe('Program flow', () => {
       '0x0107    nop',]
       .join('\n'));
   });
+
+  it('should handle multiple sized instructions and unsupported opcodes', () => {
+    disasm.setUint8Array(new Uint8Array([
+      0x01/*size=3*/, 0xff, 0xff,
+      0xff/*size=1*/,
+      0x0e/*size=2*/, 0xff,
+      0x00/*size=1*/,
+      0xff,]));
+    expect(disasm.disassemble()).to.equal([
+      '0x0100    ld bc,#0xffff',
+      '0x0103    .db 0xff',
+      '0x0104    ld c,#0xff',
+      '0x0106    nop',
+      '0x0107    .db 0xff',]
+      .join('\n'));
+  });
 });
