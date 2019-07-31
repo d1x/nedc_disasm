@@ -31,4 +31,20 @@ describe('Program flow', () => {
       '0x0104    nop',]
       .join('\n'));
   });
+
+  it('should handle multiple sized instructions', () => {
+    disasm.setUint8Array(new Uint8Array([
+      0x00/*size=1*/,
+      0x01/*size=3*/, 0xab, 0xbc,
+      0x02/*size=1*/,
+      0x0e/*size=2*/, 0xff,
+      0x00,]));
+    expect(disasm.disassemble()).to.equal([
+      '0x0100    nop',
+      '0x0101    ld bc,#0xbcab',
+      '0x0104    ld (bc),a',
+      '0x0105    ld c,#0xff',
+      '0x0107    nop',]
+      .join('\n'));
+  });
 });

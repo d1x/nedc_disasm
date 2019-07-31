@@ -312,22 +312,28 @@ class Disasm {
     queue.push(this.readByte_());
 
     while (queue.length !== 0) {
-      const byte = queue.shift();
-      if (OPCODE_TABLE[byte] === null) {
-        this.handleUnsupportedOpcode_(byte);
+      const opcode = queue.shift();
+      if (OPCODE_TABLE[opcode] === null) {
+        // Treat unsupported opcodes as data
+        this.map[this.addr++] = `.db ${Disasm.toByteString(opcode)}`;
       } else {
-        const opcodeObj = OPCODE_TABLE[byte];
+        const opcodeObj = OPCODE_TABLE[opcode];
         let mnemonic = opcodeObj.mnemonic;
         if (opcodeObj.size === 3) {
           mnemonic = mnemonic.replace('**',
             `#${Disasm.toWordString(
               `${this.readByte_()}`, `${this.readByte_()}`)}`);
+          this.map[this.addr] = mnemonic;
+          this.addr += 3;
         } else if (opcodeObj.size === 2) {
           mnemonic = mnemonic.replace('*',
             `#${Disasm.toByteString(`${this.readByte_()}`)}`);
+          this.map[this.addr] = mnemonic;
+          this.addr += 2;
+        } else { // opcodeObj.size == 1
+          this.map[this.addr++] = mnemonic;
         }
 
-        this.map[this.addr++] = mnemonic;
         if (mnemonic.startsWith('rst')) {
           this.handleApiCall_();
         }
@@ -338,14 +344,6 @@ class Disasm {
       }
     }
     return this.buildOutput_();
-  }
-
-  /**
-   * @param opcode
-   * @private
-   */
-  handleUnsupportedOpcode_(opcode) {
-    this.map[this.addr++] = `.db ${Disasm.toByteString(opcode)}`;
   }
 
   /** @private */
