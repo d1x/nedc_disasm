@@ -91,6 +91,30 @@ describe('Program flow', () => {
     ].join('\n'));
   });
 
+  it('should handle conditional, relative jumps', () => {
+    disasm.setUint8Array(new Uint8Array([
+      0x20, 0x03, /* jr nz,#0x03 ; relative +3 */
+      0x00, 0x00, 0x00, 0x00,]));
+    expect(disasm.disassemble()).to.equal([
+      '0x0100    jr nz,#0x03',
+      '0x0102    nop',
+      '0x0103    nop',
+      '0x0104    nop',
+      '0x0105    nop',
+    ].join('\n'));
+
+    disasm.setUint8Array(new Uint8Array([
+      0x10, 0x03, /* djnz #0x03 ; relative +3 */
+      0x00, 0x00, 0x00, 0x00,]));
+    expect(disasm.disassemble()).to.equal([
+      '0x0100    djnz #0x03',
+      '0x0102    nop',
+      '0x0103    nop',
+      '0x0104    nop',
+      '0x0105    nop',
+    ].join('\n'));
+  });
+
   it('should handle absolute jumps', () => {
     disasm.setUint8Array(new Uint8Array([
       0xc3, 0x05, 0x01, /* jp #0x0105 */
