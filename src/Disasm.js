@@ -280,15 +280,12 @@ class Disasm {
   }
 
   /**
-   * @param {number} num1
-   * @param {number} num2
+   * @param {number} number
    * @return {string} little endian hex value 0x0000 to 0xffff
    */
-  static toWordString(num1, num2) {
-      const hex1 = num1.toString(16);
-      const hex2 = num2.toString(16);
-      return '0x' + '00'.substr(0, 2 - hex2.length) + hex2 +
-          '00'.substr(0, 2 - hex1.length) + hex1;
+  static toWordString(number) {
+    const hex = number.toString(16);
+    return `0x${'0000'.substr(0, 4 - hex.length)}${hex}`;
   }
 
   /** @param {Uint8Array} uint8array */
@@ -319,9 +316,9 @@ class Disasm {
         mnemonic = opcodeObj.mnemonic;
         if (opcodeObj.size === 3) {
           this.visit_(this.addr, this.addr + 2);
-          mnemonic = mnemonic.replace('**',
-            `#${Disasm.toWordString(
-              this.readByte_(/*offset=*/ 1), this.readByte_(/*offset=*/ 2))}`);
+          param = this.readByte_(/*offset=*/ 1) +
+            (this.readByte_(/*offset=*/ 2) << 8);
+          mnemonic = mnemonic.replace('**', `#${Disasm.toWordString(param)}`);
           this.map[this.addr] = mnemonic;
           this.addr += 3;
         } else if (opcodeObj.size === 2) {
@@ -338,7 +335,9 @@ class Disasm {
         if (mnemonic.startsWith('rst')) {
           this.handleApiCall_();
         }
-
+        if (mnemonic.startsWith('jp')) {
+          this.addr = param - START_ADDR;
+        }
         if (mnemonic.startsWith('jr')) {
           const offset = Disasm.toSigned_(param);
           this.addr += offset;
