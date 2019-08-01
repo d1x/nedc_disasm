@@ -76,5 +76,18 @@ describe('Program flow', () => {
       '0x0104    .db 0x03',
       '0x0105    nop',
     ].join('\n'));
+
+    disasm.setUint8Array(new Uint8Array([
+      0x18, 0x03, /* jr #0x03 ; relative +3 */
+      0x01, 0x02, /* data */
+      0x00, /* nop */
+      0x18, 0xfd, /* jr #0xfd ; relative -3 */]));
+    expect(disasm.disassemble()).to.equal([
+      '0x0100    jr #0x03',
+      '0x0102    .db 0x01',
+      '0x0103    .db 0x02',
+      '0x0104    nop',
+      '0x0105    jr #0xfd',
+    ].join('\n'));
   });
 });

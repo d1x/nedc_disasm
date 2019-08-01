@@ -280,13 +280,13 @@ class Disasm {
   }
 
   /**
-   * @param {string} decimal1
-   * @param {string} decimal2
+   * @param {number} num1
+   * @param {number} num2
    * @return {string} little endian hex value 0x0000 to 0xffff
    */
-  static toWordString(decimal1, decimal2) {
-      const hex1 = parseInt(decimal1).toString(16);
-      const hex2 = parseInt(decimal2).toString(16);
+  static toWordString(num1, num2) {
+      const hex1 = num1.toString(16);
+      const hex2 = num2.toString(16);
       return '0x' + '00'.substr(0, 2 - hex2.length) + hex2 +
           '00'.substr(0, 2 - hex1.length) + hex1;
   }
@@ -307,6 +307,9 @@ class Disasm {
 
     while (queue.length !== 0) {
       const opcode = queue.shift();
+      if (this.visited[this.addr]) {
+        continue;
+      }
       const opcodeObj = OPCODE_TABLE[opcode];
       let mnemonic, param;
       if (opcodeObj === null) {
@@ -318,12 +321,12 @@ class Disasm {
           this.visit_(this.addr, this.addr + 2);
           mnemonic = mnemonic.replace('**',
             `#${Disasm.toWordString(
-              `${this.readNextByte_()}`, `${this.readNextByte_()}`)}`);
+              this.readByte_(/*offset=*/ 1), this.readByte_(/*offset=*/ 2))}`);
           this.map[this.addr] = mnemonic;
           this.addr += 3;
         } else if (opcodeObj.size === 2) {
           this.visit_(this.addr, this.addr + 1);
-          param = this.readNextByte_();
+          param = this.readByte_(/*offset=*/ 1);
           mnemonic = mnemonic.replace('*', `#${Disasm.toByteString(param)}`);
           this.map[this.addr] = mnemonic;
           this.addr += 2;
@@ -335,19 +338,32 @@ class Disasm {
         if (mnemonic.startsWith('rst')) {
           this.handleApiCall_();
         }
+
+        if (mnemonic.startsWith('jr')) {
+          const offset = Disasm.toSigned_(param);
+          this.addr += offset;
+        }
       }
 
-      if (this.nextByte < this.input.length) {
-        if (mnemonic && mnemonic.startsWith('jr')) {
-          queue.push(this.readByte_(param));
-          this.addr += param;
-        } else {
-          queue.push(this.readNextByte_());
-        }
+      if (this.addr < this.input.length) {
+        queue.push(this.readNextByte_());
       }
     }
     this.handleUnvisitedAddresses_();
     return this.buildOutput_();
+  }
+
+  /**
+   * @param byte
+   * @returns {number}
+   * @private
+   */
+  static toSigned_(byte) {
+    if (byte >= 0 && byte < 0x80) {
+      return byte;
+    } else {
+      return -1*((~byte & 0xff) + 1);
+    }
   }
 
   /**
@@ -431,11 +447,10 @@ class Disasm {
    * @private
    */
   readByte_(offset = 0) {
-    this.nextByte += offset;
-    if (this.nextByte === this.input.length) {
+    if (this.addr === this.input.length) {
       throw new Error('EOF');
     }
-    return this.input[this.nextByte++];
+    return this.input[this.addr + offset];
   }
 
   /**
