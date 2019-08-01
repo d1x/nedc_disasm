@@ -13,22 +13,24 @@ describe('Program flow', () => {
   it('should disassemble nops', () => {
     disasm.setUint8Array(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00,]));
     expect(disasm.disassemble()).to.equal([
-      '0x0100    nop',
-      '0x0101    nop',
-      '0x0102    nop',
-      '0x0103    nop',
-      '0x0104    nop',]
+      '    .org 0x100',
+      '    nop',
+      '    nop',
+      '    nop',
+      '    nop',
+      '    nop',]
       .join('\n'));
   });
 
   it('should treat unsupported opcodes as data', () => {
     disasm.setUint8Array(new Uint8Array([0x00, 0x00, 0x00, 0xff, 0x00,]));
     expect(disasm.disassemble()).to.equal([
-      '0x0100    nop',
-      '0x0101    nop',
-      '0x0102    nop',
-      '0x0103    .db 0xff',
-      '0x0104    nop',]
+      '    .org 0x100',
+      '    nop',
+      '    nop',
+      '    nop',
+      '    .db 0xff',
+      '    nop',]
       .join('\n'));
   });
 
@@ -40,11 +42,12 @@ describe('Program flow', () => {
       0x0e/*size=2*/, 0xff,
       0x00,]));
     expect(disasm.disassemble()).to.equal([
-      '0x0100    nop',
-      '0x0101    ld bc,#0xbcab',
-      '0x0104    ld (bc),a',
-      '0x0105    ld c,#0xff',
-      '0x0107    nop',]
+      '    .org 0x100',
+      '    nop',
+      '    ld bc,#0xbcab',
+      '    ld (bc),a',
+      '    ld c,#0xff',
+      '    nop',]
       .join('\n'));
   });
 
@@ -56,11 +59,12 @@ describe('Program flow', () => {
       0x00/*size=1*/,
       0xff,]));
     expect(disasm.disassemble()).to.equal([
-      '0x0100    ld bc,#0xffff',
-      '0x0103    .db 0xff',
-      '0x0104    ld c,#0xff',
-      '0x0106    nop',
-      '0x0107    .db 0xff',]
+      '    .org 0x100',
+      '    ld bc,#0xffff',
+      '    .db 0xff',
+      '    ld c,#0xff',
+      '    nop',
+      '    .db 0xff',]
       .join('\n'));
   });
 
@@ -70,11 +74,12 @@ describe('Program flow', () => {
       0x01, 0x02, 0x03, /* data */
       0x00, /* next pc */]));
     expect(disasm.disassemble()).to.equal([
-      '0x0100    jr #0x03',
-      '0x0102    .db 0x01',
-      '0x0103    .db 0x02',
-      '0x0104    .db 0x03',
-      '0x0105    nop',
+      '    .org 0x100',
+      '    jr #0x03',
+      '    .db 0x01',
+      '    .db 0x02',
+      '    .db 0x03',
+      '    nop',
     ].join('\n'));
 
     disasm.setUint8Array(new Uint8Array([
@@ -83,11 +88,12 @@ describe('Program flow', () => {
       0x00, /* nop */
       0x18, 0xfd, /* jr #0xfd ; relative -3 */]));
     expect(disasm.disassemble()).to.equal([
-      '0x0100    jr #0x03',
-      '0x0102    .db 0x01',
-      '0x0103    .db 0x02',
-      '0x0104    nop',
-      '0x0105    jr #0xfd',
+      '    .org 0x100',
+      '    jr #0x03',
+      '    .db 0x01',
+      '    .db 0x02',
+      '    nop',
+      '    jr #0xfd',
     ].join('\n'));
   });
 
@@ -96,22 +102,24 @@ describe('Program flow', () => {
       0x20, 0x03, /* jr nz,#0x03 ; relative +3 */
       0x00, 0x00, 0x00, 0x00,]));
     expect(disasm.disassemble()).to.equal([
-      '0x0100    jr nz,#0x03',
-      '0x0102    nop',
-      '0x0103    nop',
-      '0x0104    nop',
-      '0x0105    nop',
+      '    .org 0x100',
+      '    jr nz,#0x03',
+      '    nop',
+      '    nop',
+      '    nop',
+      '    nop',
     ].join('\n'));
 
     disasm.setUint8Array(new Uint8Array([
       0x10, 0x03, /* djnz #0x03 ; relative +3 */
       0x00, 0x00, 0x00, 0x00,]));
     expect(disasm.disassemble()).to.equal([
-      '0x0100    djnz #0x03',
-      '0x0102    nop',
-      '0x0103    nop',
-      '0x0104    nop',
-      '0x0105    nop',
+      '    .org 0x100',
+      '    djnz #0x03',
+      '    nop',
+      '    nop',
+      '    nop',
+      '    nop',
     ].join('\n'));
   });
 
@@ -121,10 +129,11 @@ describe('Program flow', () => {
       0x01, 0x02, /* data */
       0x00, /* next pc */]));
     expect(disasm.disassemble()).to.equal([
-      '0x0100    jp #0x0105',
-      '0x0103    .db 0x01',
-      '0x0104    .db 0x02',
-      '0x0105    nop',
+      '    .org 0x100',
+      '    jp #0x0105',
+      '    .db 0x01',
+      '    .db 0x02',
+      '    nop',
     ].join('\n'));
   });
 
@@ -133,10 +142,11 @@ describe('Program flow', () => {
       0xc2, 0x05, 0x01, /* jp nz,#0x0105 */
       0x00, 0x00, 0x00,]));
     expect(disasm.disassemble()).to.equal([
-      '0x0100    jp nz,#0x0105',
-      '0x0103    nop',
-      '0x0104    nop',
-      '0x0105    nop',
+      '    .org 0x100',
+      '    jp nz,#0x0105',
+      '    nop',
+      '    nop',
+      '    nop',
     ].join('\n'));
   });
 
@@ -146,10 +156,11 @@ describe('Program flow', () => {
       0x01, 0x02, /* data */
       0x00,]));
     expect(disasm.disassemble()).to.equal([
-      '0x0100    call #0x0105',
-      '0x0103    .db 0x01',
-      '0x0104    .db 0x02',
-      '0x0105    nop',
+      '    .org 0x100',
+      '    call #0x0105',
+      '    .db 0x01',
+      '    .db 0x02',
+      '    nop',
     ].join('\n'));
   });
 
@@ -159,11 +170,12 @@ describe('Program flow', () => {
       0x00, 0x00,
       0x00, 0xc9,]));
     expect(disasm.disassemble()).to.equal([
-      '0x0100    call #0x0105',
-      '0x0103    nop',
-      '0x0104    nop',
-      '0x0105    nop',
-      '0x0106    ret',
+      '    .org 0x100',
+      '    call #0x0105',
+      '    nop',
+      '    nop',
+      '    nop',
+      '    ret',
     ].join('\n'));
 
     disasm.setUint8Array(new Uint8Array([
@@ -174,13 +186,14 @@ describe('Program flow', () => {
       0xcd, 0x05, 0x01, /* call #0x0105 */
       0x00, /* next pc */]));
     expect(disasm.disassemble()).to.equal([
-      '0x0100    jp #0x0107',
-      '0x0103    .db 0x01',
-      '0x0104    .db 0x02',
-      '0x0105    ret',
-      '0x0106    .db 0x03',
-      '0x0107    call #0x0105',
-      '0x010a    nop',
+      '    .org 0x100',
+      '    jp #0x0107',
+      '    .db 0x01',
+      '    .db 0x02',
+      '    ret',
+      '    .db 0x03',
+      '    call #0x0105',
+      '    nop',
     ].join('\n'));
   });
 });

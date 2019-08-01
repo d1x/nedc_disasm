@@ -12,7 +12,7 @@ describe('Opcodes', () => {
 
   it('should disassemble nop', () => {
     disasm.setUint8Array(new Uint8Array([0x00,]));
-    expect(disasm.disassemble()).to.equal('0x0100    nop');
+    expect(disasm.disassemble()).to.equal('    .org 0x100\n    nop');
   });
 
   it('should disassemble increment registers', () => {
@@ -32,7 +32,8 @@ describe('Opcodes', () => {
     };
     Object.keys(incOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
-      expect(disasm.disassemble()).to.equal(`0x0100    ${incOpcodes[opcode]}`);
+      expect(disasm.disassemble()).to.equal(
+        `    .org 0x100\n    ${incOpcodes[opcode]}`);
     });
   });
 
@@ -43,7 +44,7 @@ describe('Opcodes', () => {
     unsupportedOpcodes.forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
-        .equal(`0x0100    .db ${Disasm.toByteString(opcode)}`);
+        .equal(`    .org 0x100\n    .db ${Disasm.toByteString(opcode)}`);
     });
   });
 
@@ -64,7 +65,8 @@ describe('Opcodes', () => {
     };
     Object.keys(decOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
-      expect(disasm.disassemble()).to.equal(`0x0100    ${decOpcodes[opcode]}`);
+      expect(disasm.disassemble()).to.equal(
+        `    .org 0x100\n    ${decOpcodes[opcode]}`);
     });
   });
 
@@ -86,10 +88,11 @@ describe('Opcodes', () => {
     Object.keys(addOneByteOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
-          .equal(`0x0100    ${addOneByteOpcodes[opcode]}`);
+          .equal(`    .org 0x100\n    ${addOneByteOpcodes[opcode]}`);
     });
     disasm.setUint8Array(new Uint8Array([0xc6,0xff,]));
-    expect(disasm.disassemble()).to.equal(`0x0100    add a,#0xff`);
+    expect(disasm.disassemble()).to.equal(
+      `    .org 0x100\n    add a,#0xff`);
   });
 
   it('should disassemble adc', () => {
@@ -106,10 +109,11 @@ describe('Opcodes', () => {
     Object.keys(adcOneByteOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
-          .equal(`0x0100    ${adcOneByteOpcodes[opcode]}`);
+          .equal(`    .org 0x100\n    ${adcOneByteOpcodes[opcode]}`);
     });
     disasm.setUint8Array(new Uint8Array([0xce,0xff,]));
-    expect(disasm.disassemble()).to.equal(`0x0100    adc a,#0xff`);
+    expect(disasm.disassemble()).to.equal(
+      `    .org 0x100\n    adc a,#0xff`);
   });
 
   it('should disassemble sub', () => {
@@ -126,10 +130,10 @@ describe('Opcodes', () => {
     Object.keys(subOneByteOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
-          .equal(`0x0100    ${subOneByteOpcodes[opcode]}`);
+          .equal(`    .org 0x100\n    ${subOneByteOpcodes[opcode]}`);
     });
     disasm.setUint8Array(new Uint8Array([0xd6,0xff,]));
-    expect(disasm.disassemble()).to.equal(`0x0100    sub #0xff`);
+    expect(disasm.disassemble()).to.equal(`    .org 0x100\n    sub #0xff`);
   });
 
   it('should disassemble sbc', () => {
@@ -146,10 +150,10 @@ describe('Opcodes', () => {
     Object.keys(subOneByteOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
-          .equal(`0x0100    ${subOneByteOpcodes[opcode]}`);
+          .equal(`    .org 0x100\n    ${subOneByteOpcodes[opcode]}`);
     });
     disasm.setUint8Array(new Uint8Array([0xde,0xff,]));
-    expect(disasm.disassemble()).to.equal(`0x0100    sbc a,#0xff`);
+    expect(disasm.disassemble()).to.equal(`    .org 0x100\n    sbc a,#0xff`);
   });
 
   it('should disassemble bit operations', () => {
@@ -187,12 +191,12 @@ describe('Opcodes', () => {
     Object.keys(oneByteOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
-          .equal(`0x0100    ${oneByteOpcodes[opcode]}`);
+          .equal(`    .org 0x100\n    ${oneByteOpcodes[opcode]}`);
     });
     Object.keys(twoByteOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([opcode, 0xff,]));
-      expect(disasm.disassemble()).to
-          .equal(`0x0100    ${twoByteOpcodes[opcode].replace('*', '#0xff')}`);
+      expect(disasm.disassemble()).to.equal(
+        `    .org 0x100\n    ${twoByteOpcodes[opcode].replace('*', '#0xff')}`);
     });
   });
 
@@ -210,10 +214,10 @@ describe('Opcodes', () => {
     Object.keys(opcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
-          .equal(`0x0100    ${opcodes[opcode]}`);
+          .equal(`    .org 0x100\n    ${opcodes[opcode]}`);
     });
     disasm.setUint8Array(new Uint8Array([0xfe,0xff,]));
-    expect(disasm.disassemble()).to.equal(`0x0100    cp #0xff`);
+    expect(disasm.disassemble()).to.equal(`    .org 0x100\n    cp #0xff`);
   });
 
   it('should disassemble ld with 1-byte instructions', () => {
@@ -290,12 +294,12 @@ describe('Opcodes', () => {
     Object.keys(ldOneByteOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
-          .equal(`0x0100    ${ldOneByteOpcodes[opcode]}`);
+          .equal(`    .org 0x100\n    ${ldOneByteOpcodes[opcode]}`);
     });
   });
 
   it('should disassemble ld with 2-byte instructions', () => {
-    const ldTwoBytesOpcodes = {
+    const twoBytesOpcodes = {
       0x06: 'ld b,*',
       0x0e: 'ld c,*',
       0x16: 'ld d,*',
@@ -305,15 +309,15 @@ describe('Opcodes', () => {
       0x36: 'ld (hl),*',
       0x3e: 'ld a,*',
     };
-    Object.keys(ldTwoBytesOpcodes).forEach((opcode) => {
+    Object.keys(twoBytesOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([opcode, 0xff,]));
-      expect(disasm.disassemble()).to
-          .equal(`0x0100    ${ldTwoBytesOpcodes[opcode].replace('*','#0xff')}`);
+      expect(disasm.disassemble()).to.equal(
+        `    .org 0x100\n    ${twoBytesOpcodes[opcode].replace('*','#0xff')}`);
     });
   });
 
   it('should disassemble ld with 3-byte instructions', () => {
-    const ldThreeBytesOpcodes = {
+    const opcodes = {
       0x01: 'ld bc,**',
       0x11: 'ld de,**',
       0x21: 'ld hl,**',
@@ -323,10 +327,10 @@ describe('Opcodes', () => {
       0x32: 'ld (**),a',
       0x3a: 'ld a,(**)',
     };
-    Object.keys(ldThreeBytesOpcodes).forEach((opcode) => {
+    Object.keys(opcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([opcode, 0xab, 0xcd,]));
       expect(disasm.disassemble()).to.equal(
-          `0x0100    ${ldThreeBytesOpcodes[opcode].replace('**','#0xcdab')}`);
+          `    .org 0x100\n    ${opcodes[opcode].replace('**','#0xcdab')}`);
     });
   });
 
@@ -340,7 +344,7 @@ describe('Opcodes', () => {
     Object.keys(shiftOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
       expect(disasm.disassemble()).to
-          .equal(`0x0100    ${shiftOpcodes[opcode]}`);
+          .equal(`    .org 0x100\n    ${shiftOpcodes[opcode]}`);
     });
   });
 
@@ -352,7 +356,8 @@ describe('Opcodes', () => {
     };
     Object.keys(opcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
-      expect(disasm.disassemble()).to.equal(`0x0100    ${opcodes[opcode]}`);
+      expect(disasm.disassemble()).to.equal(
+        `    .org 0x100\n    ${opcodes[opcode]}`);
     });
   });
 
@@ -375,12 +380,13 @@ describe('Opcodes', () => {
     };
     Object.keys(retOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
-      expect(disasm.disassemble()).to.equal(`0x0100    ${retOpcodes[opcode]}`);
+      expect(disasm.disassemble()).to.equal(
+        `    .org 0x100\n    ${retOpcodes[opcode]}`);
     });
     Object.keys(callOpcodes).forEach((opcode) => {
       disasm.setUint8Array(new Uint8Array([opcode, 0xab, 0xdc,]));
-      expect(disasm.disassemble()).to
-          .equal(`0x0100    ${callOpcodes[opcode].replace('**', '#0xdcab')}`);
+      expect(disasm.disassemble()).to.equal(
+        `    .org 0x100\n    ${callOpcodes[opcode].replace('**', '#0xdcab')}`);
     });
   });
 
@@ -397,7 +403,8 @@ describe('Opcodes', () => {
     };
     Object.entries(opcodes).forEach(([opcode, mnemonic]) => {
       disasm.setUint8Array(new Uint8Array([].concat(opcode)));
-      expect(disasm.disassemble()).to.equal(`0x0100    ${mnemonic}`);
+      expect(disasm.disassemble()).to.equal(
+        `    .org 0x100\n    ${mnemonic}`);
     });
   });
 
@@ -420,45 +427,47 @@ describe('Opcodes', () => {
       0xfa: 'jp m,**',
     };
     disasm.setUint8Array(new Uint8Array([0xe9,]));
-    expect(disasm.disassemble()).to.equal('0x0100    jp (hl)');
+    expect(disasm.disassemble()).to.equal('    .org 0x100\n    jp (hl)');
 
     Object.entries(twoByteOpcodes).forEach(([opcode, mnemonic]) => {
       disasm.setUint8Array(new Uint8Array([opcode, 0xff,]));
       expect(disasm.disassemble()).to.equal(
-        `0x0100    ${mnemonic.replace('*', '#0xff')}`);
+        `    .org 0x100\n    ${mnemonic.replace('*', '#0xff')}`);
     });
     Object.entries(threeBytesOpcodes).forEach(([opcode, mnemonic]) => {
       disasm.setUint8Array(new Uint8Array([opcode, 0xab, 0xcd,]));
       expect(disasm.disassemble()).to.equal(
-        `0x0100    ${mnemonic.replace('**', '#0xcdab')}`);
+        `    .org 0x100\n    ${mnemonic.replace('**', '#0xcdab')}`);
     });
   });
 
   it('should disassemble rst, or API calls', () => {
     disasm.setUint8Array(new Uint8Array([0xc7, 0xff,]));
-    expect(disasm.disassemble()).to.equal(
-        '0x0100    rst 0x00\n' +
-        '0x0101    .db 0xff            ; API call');
+    expect(disasm.disassemble()).to.equal([
+      '    .org 0x100',
+      '    rst 0x00',
+      '    .db 0xff            ; API call',].join('\n'));
 
     disasm.setUint8Array(new Uint8Array([0xcf, 0xff,]));
-    expect(disasm.disassemble()).to.equal(
-        '0x0100    rst 0x08\n' +
-        '0x0101    .db 0xff            ; API call');
+    expect(disasm.disassemble()).to.equal([
+      '    .org 0x100',
+      '    rst 0x08',
+      '    .db 0xff            ; API call',].join('\n'));
   });
 
   it('should disassemble ex', () => {
     disasm.setUint8Array(new Uint8Array([0xe3,]));
-    expect(disasm.disassemble()).to.equal('0x0100    ex (sp),hl');
+    expect(disasm.disassemble()).to.equal('    .org 0x100\n    ex (sp),hl');
 
     disasm.setUint8Array(new Uint8Array([0xeb,]));
-    expect(disasm.disassemble()).to.equal('0x0100    ex de,hl');
+    expect(disasm.disassemble()).to.equal('    .org 0x100\n    ex de,hl');
   });
 
   it('should disassemble wait', () => {
     disasm.setUint8Array(new Uint8Array([0x76,]));
-    expect(disasm.disassemble()).to.equal('0x0100    wait a');
+    expect(disasm.disassemble()).to.equal('    .org 0x100\n    wait a');
 
     disasm.setUint8Array(new Uint8Array([0xd3, 0xff,]));
-    expect(disasm.disassemble()).to.equal('0x0100    wait #0xff');
+    expect(disasm.disassemble()).to.equal('    .org 0x100\n    wait #0xff');
   });
 });

@@ -279,15 +279,6 @@ class Disasm {
     return `0x${'00'.substr(0, 2 - hex.length)}${hex}`;
   }
 
-  /**
-   * @param {number} number
-   * @return {string} little endian hex value 0x0000 to 0xffff
-   */
-  static toWordString(number) {
-    const hex = number.toString(16);
-    return `0x${'0000'.substr(0, 4 - hex.length)}${hex}`;
-  }
-
   /** @param {Uint8Array} uint8array */
   setUint8Array(uint8array) {
     this.input = uint8array;
@@ -318,7 +309,7 @@ class Disasm {
           this.visit_(this.addr, this.addr + 2);
           param = this.readByte_(/*offset=*/ 1) +
             (this.readByte_(/*offset=*/ 2) << 8);
-          mnemonic = mnemonic.replace('**', `#${Disasm.toWordString(param)}`);
+          mnemonic = mnemonic.replace('**', `#${Disasm.toWordString_(param)}`);
           this.code[this.addr] = mnemonic;
           this.addr += 3;
         } else if (opcodeObj.size === 2) {
@@ -363,6 +354,25 @@ class Disasm {
     }
     this.handleUnvisitedAddresses_();
     return this.buildOutput_();
+  }
+
+  /**
+   * @param {number} number
+   * @return {string} little endian hex value 0x0000 to 0xffff
+   * @private
+   */
+  static toWordString_(number) {
+    const hex = number.toString(16);
+    return `0x${'0000'.substr(0, 4 - hex.length)}${hex}`;
+  }
+
+  /**
+   * @param {number} number
+   * @returns {string}
+   * @private
+   */
+  static toHexString_(number) {
+    return `0x${number.toString(16)}`;
   }
 
   /**
@@ -482,20 +492,10 @@ class Disasm {
    * @private
    */
   buildOutput_() {
-    return this.code.flatMap((line, lineNum) =>
-      line === undefined ? []
-        : `${Disasm.toAddress_(lineNum + START_ADDR)}    ${line}`
+    this.code.unshift(`.org ${Disasm.toHexString_(START_ADDR)}`);
+    return this.code.flatMap((line) =>
+      line === undefined ? [] : `    ${line}`
     ).join('\n');
-  }
-
-  /**
-   * @param {number} decimal
-   * @return {string} hex address 0x0000 to 0xffff
-   * @private
-   */
-  static toAddress_(decimal) {
-    const hex = decimal.toString(16);
-    return `0x${'0000'.substr(0, 4 - hex.length)}${hex}`;
   }
 }
 
