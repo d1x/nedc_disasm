@@ -271,11 +271,11 @@ class Disasm {
   }
 
   /**
-   * @param {string} decimal
+   * @param {number} number
    * @return {string} hex value 0x00 to 0xff
    */
-  static toByteString(decimal) {
-    const hex = parseInt(decimal).toString(16);
+  static toByteString(number) {
+    const hex = number.toString(16);
     return `0x${'00'.substr(0, 2 - hex.length)}${hex}`;
   }
 
@@ -301,71 +301,88 @@ class Disasm {
     if (this.input === null) {
       return 'No input stream';
     }
-
     this.reset_();
     const queue = [];
     queue.push(this.readNextByte_());
 
     while (queue.length !== 0) {
       const opcode = queue.shift();
-      if (OPCODE_TABLE[opcode] === null) {
+      const opcodeObj = OPCODE_TABLE[opcode];
+      let mnemonic, param;
+      if (opcodeObj === null) {
         // Treat unsupported opcodes as data
-        this.map[this.addr++] = `.db ${Disasm.toByteString(opcode)}`;
-        if (this.nextByte < this.input.length) {
-          queue.push(this.readNextByte_());
-        }
+        this.map[this.addr++] = Disasm.toDataByte_(opcode);
       } else {
-        const opcodeObj = OPCODE_TABLE[opcode];
-        let mnemonic = opcodeObj.mnemonic;
-        let param = null;
-        this.visited[this.addr] = true;
+        mnemonic = opcodeObj.mnemonic;
         if (opcodeObj.size === 3) {
-          this.visited[this.addr + 1] = true;
-          this.visited[this.addr + 2] = true;
+          this.visit_(this.addr, this.addr + 2);
           mnemonic = mnemonic.replace('**',
             `#${Disasm.toWordString(
               `${this.readNextByte_()}`, `${this.readNextByte_()}`)}`);
           this.map[this.addr] = mnemonic;
           this.addr += 3;
         } else if (opcodeObj.size === 2) {
-          this.visited[this.addr + 1] = true;
+          this.visit_(this.addr, this.addr + 1);
           param = this.readNextByte_();
-          mnemonic = mnemonic.replace('*',
-            `#${Disasm.toByteString(`${param}`)}`);
+          mnemonic = mnemonic.replace('*', `#${Disasm.toByteString(param)}`);
           this.map[this.addr] = mnemonic;
           this.addr += 2;
         } else { // opcodeObj.size == 1
+          this.visit_(this.addr);
           this.map[this.addr++] = mnemonic;
         }
 
         if (mnemonic.startsWith('rst')) {
-          this.visited[this.addr] = true;
           this.handleApiCall_();
         }
+      }
 
-        if (this.nextByte < this.input.length) {
-          if (mnemonic.startsWith('jr')) {
-            queue.push(this.readByte_(param));
-            this.addr += param;
-          } else {
-            queue.push(this.readNextByte_());
-          }
+      if (this.nextByte < this.input.length) {
+        if (mnemonic && mnemonic.startsWith('jr')) {
+          queue.push(this.readByte_(param));
+          this.addr += param;
+        } else {
+          queue.push(this.readNextByte_());
         }
       }
     }
+    this.handleUnvisitedAddresses_();
+    return this.buildOutput_();
+  }
 
+  /**
+   * @param {number} number
+   * @returns {string}
+   * @private
+   */
+  static toDataByte_(number) {
+    return `.db ${Disasm.toByteString(number)}`;
+  }
+
+  /**
+   * @param {number} begin
+   * @param {number|undefined} end
+   * @private
+   */
+  visit_(begin, end = begin) {
+    for (let address = begin; address <= end; address++) {
+      this.visited[address] = true;
+    }
+  }
+
+  /** @private */
+  handleUnvisitedAddresses_() {
     for(let i = 0; i < this.input.length; i++) {
       if (!this.visited[i]) {
-        this.map[i] = `.db ${Disasm.toByteString(this.input[i])}`;
+        this.map[i] = Disasm.toDataByte_(this.input[i]);
       }
     }
-    return this.buildOutput_();
   }
 
   /** @private */
   handleApiCall_() {
-    this.map[this.addr] =
-      `.db ${Disasm.toByteString(`${this.readNextByte_()}`)}`;
+    this.visit_(this.addr);
+    this.map[this.addr] = Disasm.toDataByte_(this.readNextByte_());
     this.commentLine_(this.addr, 'API call');
     this.addr++;
   }
@@ -405,16 +422,16 @@ class Disasm {
    * @private
    */
   readNextByte_() {
-    return this.readByte_(0);
+    return this.readByte_(/*offset=*/0);
   }
 
   /**
-   * @param {number} offset (optional)
+   * @param {number|undefined} offset
    * @return {number} next input byte
    * @private
    */
-  readByte_(offset) {
-    this.nextByte += offset || 0;
+  readByte_(offset = 0) {
+    this.nextByte += offset;
     if (this.nextByte === this.input.length) {
       throw new Error('EOF');
     }
