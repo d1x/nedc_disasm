@@ -103,4 +103,16 @@ describe('Program flow', () => {
       '0x0105    nop',
     ].join('\n'));
   });
+
+  it('should handle conditional, absolute jumps', () => {
+    disasm.setUint8Array(new Uint8Array([
+      0xc2, 0x05, 0x01, /* jp nz,#0x0105 */
+      0x00, 0x00, 0x00,]));
+    expect(disasm.disassemble()).to.equal([
+      '0x0100    jp nz,#0x0105',
+      '0x0103    nop',
+      '0x0104    nop',
+      '0x0105    nop',
+    ].join('\n'));
+  });
 });

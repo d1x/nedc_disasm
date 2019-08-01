@@ -308,12 +308,12 @@ class Disasm {
         continue;
       }
       const opcodeObj = OPCODE_TABLE[opcode];
-      let mnemonic, param;
       if (opcodeObj === null) {
         // Treat unsupported opcodes as data
         this.map[this.addr++] = Disasm.toDataByte_(opcode);
       } else {
-        mnemonic = opcodeObj.mnemonic;
+        let param;
+        let mnemonic = opcodeObj.mnemonic;
         if (opcodeObj.size === 3) {
           this.visit_(this.addr, this.addr + 2);
           param = this.readByte_(/*offset=*/ 1) +
@@ -332,18 +332,20 @@ class Disasm {
           this.map[this.addr++] = mnemonic;
         }
 
-        if (mnemonic.startsWith('rst')) {
-          this.handleApiCall_();
-        }
-        if (mnemonic.startsWith('jp')) {
-          this.addr = param - START_ADDR;
-        }
-        if (mnemonic.startsWith('jr')) {
-          const offset = Disasm.toSigned_(param);
-          this.addr += offset;
+        switch(opcode) {
+          case 0x18: // jr
+            const offset = Disasm.toSigned_(param);
+            this.addr += offset;
+            break;
+          case 0xc3: // jp
+            this.addr = param - START_ADDR;
+            break;
+          case 0xc7: // rst 0
+          case 0xcf: // rst 8
+            this.handleApiCall_();
+            break;
         }
       }
-
       if (this.addr < this.input.length) {
         queue.push(this.readNextByte_());
       }
