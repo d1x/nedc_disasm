@@ -165,5 +165,22 @@ describe('Program flow', () => {
       '0x0105    nop',
       '0x0106    ret',
     ].join('\n'));
+
+    disasm.setUint8Array(new Uint8Array([
+      0xc3, 0x07, 0x01, /* jp #0x0107 */
+      0x01, 0x02, /* data */
+      0xc9, /* routine */
+      0x03, /* data */
+      0xcd, 0x05, 0x01, /* call #0x0105 */
+      0x00, /* next pc */]));
+    expect(disasm.disassemble()).to.equal([
+      '0x0100    jp #0x0107',
+      '0x0103    .db 0x01',
+      '0x0104    .db 0x02',
+      '0x0105    ret',
+      '0x0106    .db 0x03',
+      '0x0107    call #0x0105',
+      '0x010a    nop',
+    ].join('\n'));
   });
 });

@@ -310,7 +310,7 @@ class Disasm {
       const opcodeObj = OPCODE_TABLE[opcode];
       if (opcodeObj === null) {
         // Treat unsupported opcodes as data
-        this.map[this.addr++] = Disasm.toDataByte_(opcode);
+        this.code[this.addr++] = Disasm.toDataByte_(opcode);
       } else {
         let param;
         let mnemonic = opcodeObj.mnemonic;
@@ -319,17 +319,17 @@ class Disasm {
           param = this.readByte_(/*offset=*/ 1) +
             (this.readByte_(/*offset=*/ 2) << 8);
           mnemonic = mnemonic.replace('**', `#${Disasm.toWordString(param)}`);
-          this.map[this.addr] = mnemonic;
+          this.code[this.addr] = mnemonic;
           this.addr += 3;
         } else if (opcodeObj.size === 2) {
           this.visit_(this.addr, this.addr + 1);
           param = this.readByte_(/*offset=*/ 1);
           mnemonic = mnemonic.replace('*', `#${Disasm.toByteString(param)}`);
-          this.map[this.addr] = mnemonic;
+          this.code[this.addr] = mnemonic;
           this.addr += 2;
         } else { // opcodeObj.size == 1
           this.visit_(this.addr);
-          this.map[this.addr++] = mnemonic;
+          this.code[this.addr++] = mnemonic;
         }
 
         switch(opcode) {
@@ -402,7 +402,7 @@ class Disasm {
   handleUnvisitedAddresses_() {
     for(let i = 0; i < this.input.length; i++) {
       if (!this.visited[i]) {
-        this.map[i] = Disasm.toDataByte_(this.input[i]);
+        this.code[i] = Disasm.toDataByte_(this.input[i]);
       }
     }
   }
@@ -410,7 +410,7 @@ class Disasm {
   /** @private */
   handleApiCall_() {
     this.visit_(this.addr);
-    this.map[this.addr] = Disasm.toDataByte_(this.readNextByte_());
+    this.code[this.addr] = Disasm.toDataByte_(this.readNextByte_());
     this.commentLine_(this.addr, 'API call');
     this.addr++;
   }
@@ -422,26 +422,38 @@ class Disasm {
    */
   commentLine_(addr, comment) {
     const commentStart = 20;
-    const line = this.map[addr];
-    this.map[addr] =
+    const line = this.code[addr];
+    this.code[addr] =
       `${line}${' '.repeat(commentStart)
         .substr(0, commentStart - line.length)}; ${comment}`;
   }
 
   /** @private */
   reset_() {
-    /** @type Object<number,string|null> */
-    this.map = {};
-    /** @type number */
+    /**
+     * Working code. Array position denotes address without .org offset.
+     * @type Array<string|null>
+     */
+    this.code = [];
+    /**
+     * Current program address being evaluated
+     * @type number
+     */
     this.addr = 0;
-    /** @type Array<boolean> */
+    /**
+     * Keeps track of visited addresses
+     * @type Array<boolean>
+     */
     this.visited = [];
     if (this.input !== null) {
       for (let i = 0; i < this.input.length; i++) {
         this.visited[i] = false;
       }
     }
-    /** @type Array<number> */
+    /**
+     * Keeps track of pc when calling routines
+     * @type Array<number>
+     */
     this.stack = [];
   }
 
@@ -470,12 +482,10 @@ class Disasm {
    * @private
    */
   buildOutput_() {
-    const output = [];
-    const /** Array<string> */ lines = (Object.keys(this.map));
-    lines.sort();
-    lines.forEach((line) => output.push(
-      `${Disasm.toAddress_(parseInt(line)+ START_ADDR)}    ${this.map[line]}`));
-    return output.join('\n');
+    return this.code.flatMap((line, lineNum) =>
+      line === undefined ? []
+        : `${Disasm.toAddress_(lineNum + START_ADDR)}    ${line}`
+    ).join('\n');
   }
 
   /**
