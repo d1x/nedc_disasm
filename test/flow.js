@@ -139,4 +139,31 @@ describe('Program flow', () => {
       '0x0105    nop',
     ].join('\n'));
   });
+
+  it('should handle routine calls', () => {
+    disasm.setUint8Array(new Uint8Array([
+      0xcd, 0x05, 0x01, /* call #0x0105 */
+      0x01, 0x02, /* data */
+      0x00,]));
+    expect(disasm.disassemble()).to.equal([
+      '0x0100    call #0x0105',
+      '0x0103    .db 0x01',
+      '0x0104    .db 0x02',
+      '0x0105    nop',
+    ].join('\n'));
+  });
+
+  it('should handle routine calls with return', () => {
+    disasm.setUint8Array(new Uint8Array([
+      0xcd, 0x05, 0x01, /* call #0x0105 */
+      0x00, 0x00,
+      0x00, 0xc9,]));
+    expect(disasm.disassemble()).to.equal([
+      '0x0100    call #0x0105',
+      '0x0103    nop',
+      '0x0104    nop',
+      '0x0105    nop',
+      '0x0106    ret',
+    ].join('\n'));
+  });
 });

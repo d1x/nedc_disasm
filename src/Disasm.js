@@ -333,15 +333,26 @@ class Disasm {
         }
 
         switch(opcode) {
-          case 0x18: // jr
+          case 0x18: // jr *
             const offset = Disasm.toSigned_(param);
             this.addr += offset;
             break;
-          case 0xc3: // jp
+          case 0xc3: // jp **
             this.addr = param - START_ADDR;
             break;
-          case 0xc7: // rst 0
-          case 0xcf: // rst 8
+          case 0xc9: // ret
+            if (this.stack.length === 0) {
+              console.warn('ret without pc');
+            } else {
+              this.addr = this.stack.pop(); // restore pc
+            }
+            break;
+          case 0xcd: // call **
+            this.stack.push(this.addr); // save pc
+            this.addr = param - START_ADDR;
+            break;
+          case 0xc7: // rst 0, .db *
+          case 0xcf: // rst 8, .db *
             this.handleApiCall_();
             break;
         }
@@ -423,8 +434,6 @@ class Disasm {
     this.map = {};
     /** @type number */
     this.addr = 0;
-    /** @type number */
-    this.nextByte = 0;
     /** @type Array<boolean> */
     this.visited = [];
     if (this.input !== null) {
@@ -432,6 +441,8 @@ class Disasm {
         this.visited[i] = false;
       }
     }
+    /** @type Array<number> */
+    this.stack = [];
   }
 
   /**
