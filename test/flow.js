@@ -2,6 +2,12 @@ import {expect} from 'chai';
 import {describe, beforeEach} from 'mocha';
 import Disasm from '../src/Disasm';
 
+const PREAMBLE = [
+  '    .area CODE (ABS)',
+  '    .org 0x100',
+  '',
+].join('\n');
+
 describe('Program flow', () => {
   'use strict';
   let disasm;
@@ -12,8 +18,7 @@ describe('Program flow', () => {
 
   it('should disassemble nops', () => {
     disasm.setUint8Array(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00,]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    nop',
       '    nop',
       '    nop',
@@ -24,8 +29,7 @@ describe('Program flow', () => {
 
   it('should treat unsupported opcodes as data', () => {
     disasm.setUint8Array(new Uint8Array([0x00, 0x00, 0x00, 0xff, 0x00,]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    nop',
       '    nop',
       '    nop',
@@ -41,8 +45,7 @@ describe('Program flow', () => {
       0x02/*size=1*/,
       0x0e/*size=2*/, 0xff,
       0x00,]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    nop',
       '    ld bc,#0xcdab',
       '    ld (bc),a',
@@ -58,8 +61,7 @@ describe('Program flow', () => {
       0x0e/*size=2*/, 0xff,
       0x00/*size=1*/,
       0xff,]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    ld bc,#0xffff',
       '    .db 0xff',
       '    ld c,#0xff',
@@ -73,8 +75,7 @@ describe('Program flow', () => {
       0x18, 0x03, /* jr #0x03 ; relative +3 */
       0x01, 0x02, 0x03, /* data */
       0x00, /* next pc */]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    jr #0x03',
       '    .db 0x01',
       '    .db 0x02',
@@ -87,8 +88,7 @@ describe('Program flow', () => {
       0x01, 0x02, /* data */
       0x00, /* nop */
       0x18, 0xfd, /* jr #0xfd ; relative -3 */]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    jr #0x03',
       '    .db 0x01',
       '    .db 0x02',
@@ -102,8 +102,7 @@ describe('Program flow', () => {
       0x20, 0x03, /* jr nz,#0x03 ; relative +3 */
       0x00, 0x00, 0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
       0x00, /* unreachable */]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    jr nz,#0x03',
       '    nop',
       '    nop',
@@ -118,8 +117,7 @@ describe('Program flow', () => {
       0x30, 0x03, /* jr nc,#0x03 ; relative +3 */
       0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
       0x00,]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    jr nc,#0x03',
       '    nop',
       '    jr #0xfd',
@@ -132,8 +130,7 @@ describe('Program flow', () => {
       0x28, 0x03, /* jr z,#0x03 ; relative +3 */
       0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
       0x00,]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    jr z,#0x03',
       '    nop',
       '    jr #0xfd',
@@ -146,8 +143,7 @@ describe('Program flow', () => {
       0x38, 0x03, /* jr c,#0x03 ; relative +3 */
       0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
       0x00,]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    jr c,#0x03',
       '    nop',
       '    jr #0xfd',
@@ -160,8 +156,7 @@ describe('Program flow', () => {
       0x10, 0x03, /* djnz #0x03 ; relative +3 */
       0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
       0x00,]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    djnz #0x03',
       '    nop',
       '    jr #0xfd',
@@ -174,8 +169,7 @@ describe('Program flow', () => {
       0xc3, 0x05, 0x01, /* jp #0x0105 */
       0x01, 0x02, /* data */
       0x00, /* next pc */]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    jp #0x0105',
       '    .db 0x01',
       '    .db 0x02',
@@ -187,8 +181,7 @@ describe('Program flow', () => {
     disasm.setUint8Array(new Uint8Array([
       0xc2, 0x05, 0x01, /* jp nz,#0x0105 */
       0x00, 0x00, 0x00,]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    jp nz,#0x0105',
       '    nop',
       '    nop',
@@ -201,8 +194,7 @@ describe('Program flow', () => {
       0xcd, 0x05, 0x01, /* call #0x0105 */
       0x01, 0x02, /* data */
       0x00,]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    call #0x0105',
       '    .db 0x01',
       '    .db 0x02',
@@ -215,8 +207,7 @@ describe('Program flow', () => {
       0xcd, 0x05, 0x01, /* call #0x0105 */
       0x00, 0x00, /* after routine */
       0x00, 0xc9, /* routine */]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    call #0x0105',
       '    nop',
       '    nop',
@@ -231,8 +222,7 @@ describe('Program flow', () => {
       0x03, /* data */
       0xcd, 0x05, 0x01, /* call #0x0105 */
       0x00, /* next pc */]));
-    expect(disasm.disassemble()).to.equal([
-      '    .org 0x100',
+    expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    jp #0x0107',
       '    .db 0x01',
       '    .db 0x02',

@@ -351,7 +351,7 @@ export default class Disasm {
           case 0xc9: // ret
             nextAddr = [];
             if (this.stack.length === 0) {
-              console.warn('ret without pc');
+              console.warn('[warn] ret without pc');
             } else {
               nextAddr.push(this.stack.pop()); // restore pc
             }
@@ -492,9 +492,13 @@ export default class Disasm {
    * @private
    */
   buildOutput_() {
-    this.code.unshift(`.org ${Disasm.toHexString_(START_ADDR)}`);
-    return this.code.flatMap((line) =>
-      line === undefined ? [] : `    ${line}`
+    const PREAMBLE = [
+      '.area CODE (ABS)',
+      `.org ${Disasm.toHexString_(START_ADDR)}`,
+    ];
+    const padding = '    ';
+    return PREAMBLE.concat(this.code).flatMap(
+      (line) => line === undefined ? [] : `${padding}${line}`
     ).join('\n');
   }
 }
