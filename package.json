@@ -4,16 +4,21 @@
   "description": "e-Reader Dot Code Disassembler",
   "main": "index.js",
   "scripts": {
+    "build": "babel --presets es2015 -d dist/ src",
     "test": "mocha --require babel-core/register --require babel-polyfill"
   },
   "author": "d1x <d1x.github@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "babel": "^6.23.0",
+    "babel-cli": "^6.26.0",
     "babel-polyfill": "^6.26.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-register": "^6.26.0",
     "chai": "^4.2.0",
     "mocha": "^6.2.0"
+  },
+  "dependencies": {
+    "command-line-args": "^5.1.1"
   }
 }

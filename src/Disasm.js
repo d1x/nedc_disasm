@@ -262,7 +262,7 @@ const OPCODE_TABLE = {
   0xff: null,
 };
 
-class Disasm {
+export default class Disasm {
 
   constructor() {
     /** @type Object */
@@ -498,5 +498,3 @@ class Disasm {
     ).join('\n');
   }
 }
-
-module.exports = Disasm;
