@@ -443,7 +443,7 @@ describe('Opcodes', () => {
     Object.entries(threeBytesOpcodes).forEach(([opcode, mnemonic]) => {
       disasm.setUint8Array(new Uint8Array([opcode, 0xab, 0xcd,]));
       expect(disasm.disassemble()).to.equal(
-        `${PREAMBLE}    ${mnemonic.replace('**', '#0xcdab')}`);
+        `${PREAMBLE}    ${mnemonic.replace('**', '0xcdab')}`);
     });
   });
 

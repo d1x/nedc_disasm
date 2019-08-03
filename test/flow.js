@@ -170,7 +170,7 @@ describe('Program flow', () => {
       0x01, 0x02, /* data */
       0x00, /* next pc */]));
     expect(disasm.disassemble()).to.equal(PREAMBLE + [
-      '    jp #0x0105',
+      '    jp 0x0105',
       '    .db 0x01',
       '    .db 0x02',
       '    nop',
@@ -182,7 +182,7 @@ describe('Program flow', () => {
       0xc2, 0x05, 0x01, /* jp nz,#0x0105 */
       0x00, 0x00, 0x00,]));
     expect(disasm.disassemble()).to.equal(PREAMBLE + [
-      '    jp nz,#0x0105',
+      '    jp nz,0x0105',
       '    nop',
       '    nop',
       '    nop',
@@ -223,7 +223,7 @@ describe('Program flow', () => {
       0xcd, 0x05, 0x01, /* call #0x0105 */
       0x00, /* next pc */]));
     expect(disasm.disassemble()).to.equal(PREAMBLE + [
-      '    jp #0x0107',
+      '    jp 0x0107',
       '    .db 0x01',
       '    .db 0x02',
       '    ret',

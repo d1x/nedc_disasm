@@ -316,7 +316,8 @@ export default class Disasm {
           this.visit_(addr, addr + 2);
           param = this.readByte_(addr + 1) +
             (this.readByte_(addr + 2) << 8);
-          mnemonic = mnemonic.replace('**', `#${Disasm.toWordString_(param)}`);
+          const mode = mnemonic.startsWith('jp') ? '' : '#';
+          mnemonic = mnemonic.replace('**', `${mode}${Disasm.toWordString_(param)}`);
           this.code[addr] = mnemonic;
           nextAddr.push(addr + 3);
         } else if (opcodeObj.size === 2) {
