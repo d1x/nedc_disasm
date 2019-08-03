@@ -468,11 +468,13 @@ describe('Opcodes', () => {
     expect(disasm.disassemble()).to.equal(PREAMBLE + '    ex de,hl');
   });
 
-  it('should disassemble wait', () => {
+  it('should disassemble halt (wait)', () => {
     disasm.setUint8Array(new Uint8Array([0x76,]));
-    expect(disasm.disassemble()).to.equal(PREAMBLE + '    wait a');
+    expect(disasm.disassemble()).to.equal(
+      PREAMBLE + '    halt                ; wait a');
 
     disasm.setUint8Array(new Uint8Array([0xd3, 0xff,]));
-    expect(disasm.disassemble()).to.equal(PREAMBLE + '    wait #0xff');
+    expect(disasm.disassemble()).to.equal(
+      PREAMBLE + '    halt                ; wait a frames');
   });
 });

@@ -122,7 +122,7 @@ const OPCODE_TABLE = {
   0x73: {mnemonic: 'ld (hl),e', size: 1,},
   0x74: {mnemonic: 'ld (hl),h', size: 1,},
   0x75: {mnemonic: 'ld (hl),l', size: 1,},
-  0x76: {mnemonic: 'wait a', size: 1,},
+  0x76: {mnemonic: 'halt', size: 1,},
   0x77: {mnemonic: 'ld (hl),a', size: 1,},
   0x78: {mnemonic: 'ld a,b', size: 1,},
   0x79: {mnemonic: 'ld a,c', size: 1,},
@@ -215,7 +215,7 @@ const OPCODE_TABLE = {
   0xd0: {mnemonic: 'ret nc', size: 1,},
   0xd1: {mnemonic: 'pop de', size: 1,},
   0xd2: {mnemonic: 'jp nc,**', size: 3,},
-  0xd3: {mnemonic: 'wait *', size: 2,},
+  0xd3: {mnemonic: 'halt', size: 2,},
   0xd4: {mnemonic: 'call nc,**', size: 3,},
   0xd5: {mnemonic: 'push de', size: 1,},
   0xd6: {mnemonic: 'sub *', size: 2,},
@@ -344,6 +344,9 @@ export default class Disasm {
           case 0x38: // jr c,*
             nextAddr.push(addr + 2 /*jr size*/ + Disasm.toSigned_(param));
             break;
+          case 0x76:
+            this.commentLine_(addr, 'wait a');
+            break;
           case 0xc3: // jp **
             nextAddr = [];
             nextAddr.push(param - START_ADDR);
@@ -368,6 +371,9 @@ export default class Disasm {
             this.commentLine_(addr + 1, 'API call');
             nextAddr = [];
             nextAddr.push(addr + 2);
+            break;
+          case 0xd3:
+            this.commentLine_(addr, 'wait a frames');
             break;
         }
       }
