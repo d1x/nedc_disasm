@@ -37,14 +37,14 @@ describe('Program flow', () => {
   it('should handle multiple sized instructions', () => {
     disasm.setUint8Array(new Uint8Array([
       0x00/*size=1*/,
-      0x01/*size=3*/, 0xab, 0xbc,
+      0x01/*size=3*/, 0xab, 0xcd,
       0x02/*size=1*/,
       0x0e/*size=2*/, 0xff,
       0x00,]));
     expect(disasm.disassemble()).to.equal([
       '    .org 0x100',
       '    nop',
-      '    ld bc,#0xbcab',
+      '    ld bc,#0xcdab',
       '    ld (bc),a',
       '    ld c,#0xff',
       '    nop',]
@@ -97,28 +97,74 @@ describe('Program flow', () => {
     ].join('\n'));
   });
 
-  it('should handle conditional, relative jumps', () => {
+  it('should handle jr nz branching', () => {
     disasm.setUint8Array(new Uint8Array([
       0x20, 0x03, /* jr nz,#0x03 ; relative +3 */
-      0x00, 0x00, 0x00, 0x00,]));
+      0x00, 0x00, 0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
+      0x00, /* unreachable */]));
     expect(disasm.disassemble()).to.equal([
       '    .org 0x100',
       '    jr nz,#0x03',
       '    nop',
       '    nop',
       '    nop',
+      '    jr #0xfd',
+      '    .db 0x00',
+    ].join('\n'));
+  });
+
+  it('should handle jr nc branching', () => {
+    disasm.setUint8Array(new Uint8Array([
+      0x30, 0x03, /* jr nc,#0x03 ; relative +3 */
+      0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
+      0x00,]));
+    expect(disasm.disassemble()).to.equal([
+      '    .org 0x100',
+      '    jr nc,#0x03',
+      '    nop',
+      '    jr #0xfd',
       '    nop',
     ].join('\n'));
+  });
 
+  it('should handle jr z branching', () => {
+    disasm.setUint8Array(new Uint8Array([
+      0x28, 0x03, /* jr z,#0x03 ; relative +3 */
+      0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
+      0x00,]));
+    expect(disasm.disassemble()).to.equal([
+      '    .org 0x100',
+      '    jr z,#0x03',
+      '    nop',
+      '    jr #0xfd',
+      '    nop',
+    ].join('\n'));
+  });
+
+  it('should handle jr c branching', () => {
+    disasm.setUint8Array(new Uint8Array([
+      0x38, 0x03, /* jr c,#0x03 ; relative +3 */
+      0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
+      0x00,]));
+    expect(disasm.disassemble()).to.equal([
+      '    .org 0x100',
+      '    jr c,#0x03',
+      '    nop',
+      '    jr #0xfd',
+      '    nop',
+    ].join('\n'));
+  });
+
+  it('should handle djnz branching', () => {
     disasm.setUint8Array(new Uint8Array([
       0x10, 0x03, /* djnz #0x03 ; relative +3 */
-      0x00, 0x00, 0x00, 0x00,]));
+      0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
+      0x00,]));
     expect(disasm.disassemble()).to.equal([
       '    .org 0x100',
       '    djnz #0x03',
       '    nop',
-      '    nop',
-      '    nop',
+      '    jr #0xfd',
       '    nop',
     ].join('\n'));
   });
@@ -167,8 +213,8 @@ describe('Program flow', () => {
   it('should handle routine calls with return', () => {
     disasm.setUint8Array(new Uint8Array([
       0xcd, 0x05, 0x01, /* call #0x0105 */
-      0x00, 0x00,
-      0x00, 0xc9,]));
+      0x00, 0x00, /* after routine */
+      0x00, 0xc9, /* routine */]));
     expect(disasm.disassemble()).to.equal([
       '    .org 0x100',
       '    call #0x0105',

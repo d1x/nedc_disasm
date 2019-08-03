@@ -290,67 +290,88 @@ export default class Disasm {
       return 'No input stream';
     }
     this.reset_();
+    /** holds addresses to evaluate */
     const queue = [];
-    queue.push(this.readNextByte_());
-
+    queue.push(0);
+    // BFS
     while (queue.length !== 0) {
-      const opcode = queue.shift();
-      if (this.visited[this.addr]) {
+      const addr = queue.shift();
+      if (addr < 0 || addr >= this.input.length) {
+        continue;
+      }
+      const opcode = this.readByte_(addr);
+      if (this.visited[addr]) {
         continue;
       }
       const opcodeObj = OPCODE_TABLE[opcode];
+      let nextAddr = [];
       if (opcodeObj === null) {
         // Treat unsupported opcodes as data
-        this.code[this.addr++] = Disasm.toDataByte_(opcode);
+        this.code[addr] = Disasm.toDataByte_(opcode);
+        nextAddr.push(addr + 1);
       } else {
         let param;
         let mnemonic = opcodeObj.mnemonic;
         if (opcodeObj.size === 3) {
-          this.visit_(this.addr, this.addr + 2);
-          param = this.readByte_(/*offset=*/ 1) +
-            (this.readByte_(/*offset=*/ 2) << 8);
+          this.visit_(addr, addr + 2);
+          param = this.readByte_(addr + 1) +
+            (this.readByte_(addr + 2) << 8);
           mnemonic = mnemonic.replace('**', `#${Disasm.toWordString_(param)}`);
-          this.code[this.addr] = mnemonic;
-          this.addr += 3;
+          this.code[addr] = mnemonic;
+          nextAddr.push(addr + 3);
         } else if (opcodeObj.size === 2) {
-          this.visit_(this.addr, this.addr + 1);
-          param = this.readByte_(/*offset=*/ 1);
+          this.visit_(addr, addr + 1);
+          param = this.readByte_(addr + 1);
           mnemonic = mnemonic.replace('*', `#${Disasm.toByteString(param)}`);
-          this.code[this.addr] = mnemonic;
-          this.addr += 2;
+          this.code[addr] = mnemonic;
+          nextAddr.push(addr + 2);
         } else { // opcodeObj.size == 1
-          this.visit_(this.addr);
-          this.code[this.addr++] = mnemonic;
+          this.visit_(addr);
+          this.code[addr] = mnemonic;
+          nextAddr.push(addr + 1);
         }
 
+        // Handle opcodes that change the next address to evaluate
         switch(opcode) {
           case 0x18: // jr *
-            const offset = Disasm.toSigned_(param);
-            this.addr += offset;
+            nextAddr = [];
+            nextAddr.push(addr + 2 /*jr size*/ + Disasm.toSigned_(param));
+            break;
+          case 0x10: // djnz *
+          case 0x20: // jr nz,*
+          case 0x28: // jr z,*
+          case 0x30: // jr nc,*
+          case 0x38: // jr c,*
+            nextAddr.push(addr + 2 /*jr size*/ + Disasm.toSigned_(param));
             break;
           case 0xc3: // jp **
-            this.addr = param - START_ADDR;
+            nextAddr = [];
+            nextAddr.push(param - START_ADDR);
             break;
           case 0xc9: // ret
+            nextAddr = [];
             if (this.stack.length === 0) {
               console.warn('ret without pc');
             } else {
-              this.addr = this.stack.pop(); // restore pc
+              nextAddr.push(this.stack.pop()); // restore pc
             }
             break;
           case 0xcd: // call **
-            this.stack.push(this.addr); // save pc
-            this.addr = param - START_ADDR;
+            this.stack.push(nextAddr.pop()); // save pc
+            nextAddr = [];
+            nextAddr.push(param - START_ADDR);
             break;
           case 0xc7: // rst 0, .db *
           case 0xcf: // rst 8, .db *
-            this.handleApiCall_();
+            this.visit_(addr + 1);
+            this.code[addr + 1] = Disasm.toDataByte_(this.readByte_(addr + 1));
+            this.commentLine_(addr + 1, 'API call');
+            nextAddr = [];
+            nextAddr.push(addr + 2);
             break;
         }
       }
-      if (this.addr < this.input.length) {
-        queue.push(this.readNextByte_());
-      }
+      queue.push(...nextAddr);
     }
     this.handleUnvisitedAddresses_();
     return this.buildOutput_();
@@ -417,14 +438,6 @@ export default class Disasm {
     }
   }
 
-  /** @private */
-  handleApiCall_() {
-    this.visit_(this.addr);
-    this.code[this.addr] = Disasm.toDataByte_(this.readNextByte_());
-    this.commentLine_(this.addr, 'API call');
-    this.addr++;
-  }
-
   /**
    * @param {number} addr
    * @param {string} comment
@@ -446,11 +459,6 @@ export default class Disasm {
      */
     this.code = [];
     /**
-     * Current program address being evaluated
-     * @type number
-     */
-    this.addr = 0;
-    /**
      * Keeps track of visited addresses
      * @type Array<boolean>
      */
@@ -468,23 +476,15 @@ export default class Disasm {
   }
 
   /**
+   * @param {number} address
    * @return {number} next input byte
    * @private
    */
-  readNextByte_() {
-    return this.readByte_(/*offset=*/0);
-  }
-
-  /**
-   * @param {number|undefined} offset
-   * @return {number} next input byte
-   * @private
-   */
-  readByte_(offset = 0) {
-    if (this.addr === this.input.length) {
-      throw new Error('EOF');
+  readByte_(address) {
+    if (address < 0 || address >= this.input.length) {
+      throw new Error('Address out of bounds');
     }
-    return this.input[this.addr + offset];
+    return this.input[address];
   }
 
   /**
