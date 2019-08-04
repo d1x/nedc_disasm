@@ -262,6 +262,10 @@ const OPCODE_TABLE = {
   0xff: null,
 };
 
+const KNOWN_ER_API = {
+  '0xc7_0x00': 'ER_API_FadeIn',
+};
+
 export default class Disasm {
 
   constructor() {
@@ -377,8 +381,14 @@ export default class Disasm {
           case 0xc7: // rst 0, .db *
           case 0xcf: // rst 8, .db *
             this.visit_(addr + 1);
-            this.code[addr + 1] = Disasm.toDataByte_(this.readByte_(addr + 1));
-            this.commentLine_(addr + 1, 'API call');
+            const apiNum = this.readByte_(addr + 1);
+            const apiKey = `${Disasm.toByteString(opcode)}_${Disasm.toByteString(apiNum)}`;
+            if (KNOWN_ER_API[apiKey]) {
+              this.code[addr + 1] = `.db ${KNOWN_ER_API[apiKey]}`;
+            } else {
+              this.code[addr + 1] = Disasm.toDataByte_(apiNum);
+              this.commentLine_(addr + 1, 'Unknown API call');
+            }
             nextAddr = [];
             nextAddr.push(addr + 2);
             break;
@@ -523,6 +533,7 @@ export default class Disasm {
     const padding = '    ';
     const PREAMBLE = [
       `${padding}.area CODE (ABS)`,
+      `${padding}.include "erapi.asm"`,
       `${padding}.org ${Disasm.toHexString_(START_ADDR)}`,
       '',
     ].join('\n');
