@@ -414,16 +414,8 @@ describe('Opcodes', () => {
     });
   });
 
-  it('should disassemble jumps', () => {
-    const twoByteOpcodes = {
-      0x10: 'djnz *',
-      0x18: 'jr *',
-      0x20: 'jr nz,*',
-      0x28: 'jr z,*',
-      0x30: 'jr nc,*',
-      0x38: 'jr c,*',
-    };
-    const threeBytesOpcodes = {
+  it('should disassemble absolute jumps', () => {
+    const opcodes = {
       0xc2: 'jp nz,**',
       0xc3: 'jp **',
       0xca: 'jp z,**',
@@ -435,15 +427,30 @@ describe('Opcodes', () => {
     disasm.setUint8Array(new Uint8Array([0xe9,]));
     expect(disasm.disassemble()).to.equal(PREAMBLE + '    jp (hl)');
 
-    Object.entries(twoByteOpcodes).forEach(([opcode, mnemonic]) => {
-      disasm.setUint8Array(new Uint8Array([opcode, 0xff,]));
-      expect(disasm.disassemble()).to.equal(
-        `${PREAMBLE}    ${mnemonic.replace('*', '#0xff')}`);
-    });
-    Object.entries(threeBytesOpcodes).forEach(([opcode, mnemonic]) => {
+    Object.entries(opcodes).forEach(([opcode, mnemonic]) => {
       disasm.setUint8Array(new Uint8Array([opcode, 0xab, 0xcd,]));
       expect(disasm.disassemble()).to.equal(
         `${PREAMBLE}    ${mnemonic.replace('**', '0xcdab')}`);
+    });
+  });
+
+  it('should disassemble relative jumps', () => {
+    const opcodes = {
+      0x10: 'djnz *',
+      0x18: 'jr *',
+      0x20: 'jr nz,*',
+      0x28: 'jr z,*',
+      0x30: 'jr nc,*',
+      0x38: 'jr c,*',
+    };
+    Object.entries(opcodes).forEach(([opcode, mnemonic]) => {
+      // one-liner program, instruction jumps to itself
+      disasm.setUint8Array(new Uint8Array([opcode, 0xfe /* relative -2 */,]));
+      expect(disasm.disassemble()).to.equal(PREAMBLE + [
+          '',
+          'label_0x0100:',
+          `    ${mnemonic.replace('*', 'label_0x0100')}`,
+        ].join('\n'));
     });
   });
 

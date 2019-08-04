@@ -323,7 +323,16 @@ export default class Disasm {
         } else if (opcodeObj.size === 2) {
           this.visit_(addr, addr + 1);
           param = this.readByte_(addr + 1);
-          mnemonic = mnemonic.replace('*', `#${Disasm.toByteString(param)}`);
+          if (mnemonic.startsWith('jr') || mnemonic.startsWith('djnz')) {
+            const labelAddr = Disasm.getRelativeJumpAddress_(addr, param);
+            if (!this.labels[labelAddr]) {
+              this.labels[labelAddr] =
+                `label_${Disasm.toWordString_(START_ADDR + labelAddr)}`;
+            }
+            mnemonic = mnemonic.replace('*', this.labels[labelAddr]);
+          } else {
+            mnemonic = mnemonic.replace('*', `#${Disasm.toByteString(param)}`);
+          }
           this.code[addr] = mnemonic;
           nextAddr.push(addr + 2);
         } else { // opcodeObj.size == 1
@@ -336,14 +345,14 @@ export default class Disasm {
         switch(opcode) {
           case 0x18: // jr *
             nextAddr = [];
-            nextAddr.push(addr + 2 /*jr size*/ + Disasm.toSigned_(param));
+            nextAddr.push(Disasm.getRelativeJumpAddress_(addr, param));
             break;
           case 0x10: // djnz *
           case 0x20: // jr nz,*
           case 0x28: // jr z,*
           case 0x30: // jr nc,*
           case 0x38: // jr c,*
-            nextAddr.push(addr + 2 /*jr size*/ + Disasm.toSigned_(param));
+            nextAddr.push(Disasm.getRelativeJumpAddress_(addr, param));
             break;
           case 0x76:
             this.commentLine_(addr, 'wait a');
@@ -382,6 +391,16 @@ export default class Disasm {
     }
     this.handleUnvisitedAddresses_();
     return this.buildOutput_();
+  }
+
+  /**
+   * @param {number} addr
+   * @param {number} signed offset
+   * @returns {number} absolute address
+   * @private
+   */
+  static getRelativeJumpAddress_(addr, signed) {
+    return addr + 2 /* jr instruction size */ + Disasm.toSigned_(signed);
   }
 
   /**
@@ -480,6 +499,8 @@ export default class Disasm {
      * @type Array<number>
      */
     this.stack = [];
+
+    this.labels = {};
   }
 
   /**
@@ -499,13 +520,19 @@ export default class Disasm {
    * @private
    */
   buildOutput_() {
-    const PREAMBLE = [
-      '.area CODE (ABS)',
-      `.org ${Disasm.toHexString_(START_ADDR)}`,
-    ];
     const padding = '    ';
-    return PREAMBLE.concat(this.code).flatMap(
-      (line) => line === undefined ? [] : `${padding}${line}`
-    ).join('\n');
+    const PREAMBLE = [
+      `${padding}.area CODE (ABS)`,
+      `${padding}.org ${Disasm.toHexString_(START_ADDR)}`,
+      '',
+    ].join('\n');
+
+    return PREAMBLE + this.code.flatMap((line, lineNum) => {
+      if (line === undefined) {
+        return [];
+      }
+      const label = this.labels[lineNum] ? `\n${this.labels[lineNum]}:\n` : '';
+      return `${label}${padding}${line}`;
+    }).join('\n');
   }
 }

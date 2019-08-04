@@ -76,10 +76,12 @@ describe('Program flow', () => {
       0x01, 0x02, 0x03, /* data */
       0x00, /* next pc */]));
     expect(disasm.disassemble()).to.equal(PREAMBLE + [
-      '    jr #0x03',
+      '    jr label_0x0105',
       '    .db 0x01',
       '    .db 0x02',
       '    .db 0x03',
+      '',
+      'label_0x0105:',
       '    nop',
     ].join('\n'));
 
@@ -89,11 +91,15 @@ describe('Program flow', () => {
       0x00, /* nop */
       0x18, 0xfd, /* jr #0xfd ; relative -3 */]));
     expect(disasm.disassemble()).to.equal(PREAMBLE + [
-      '    jr #0x03',
+      '    jr label_0x0105',
       '    .db 0x01',
       '    .db 0x02',
+      '',
+      'label_0x0104:',
       '    nop',
-      '    jr #0xfd',
+      '',
+      'label_0x0105:',
+      '    jr label_0x0104',
     ].join('\n'));
   });
 
@@ -103,11 +109,15 @@ describe('Program flow', () => {
       0x00, 0x00, 0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
       0x00, /* unreachable */]));
     expect(disasm.disassemble()).to.equal(PREAMBLE + [
-      '    jr nz,#0x03',
+      '    jr nz,label_0x0105',
       '    nop',
       '    nop',
+      '',
+      'label_0x0104:',
       '    nop',
-      '    jr #0xfd',
+      '',
+      'label_0x0105:',
+      '    jr label_0x0104',
       '    .db 0x00',
     ].join('\n'));
   });
@@ -118,9 +128,13 @@ describe('Program flow', () => {
       0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
       0x00,]));
     expect(disasm.disassemble()).to.equal(PREAMBLE + [
-      '    jr nc,#0x03',
+      '    jr nc,label_0x0105',
+      '',
+      'label_0x0102:',
       '    nop',
-      '    jr #0xfd',
+      '    jr label_0x0102',
+      '',
+      'label_0x0105:',
       '    nop',
     ].join('\n'));
   });
@@ -131,9 +145,13 @@ describe('Program flow', () => {
       0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
       0x00,]));
     expect(disasm.disassemble()).to.equal(PREAMBLE + [
-      '    jr z,#0x03',
+      '    jr z,label_0x0105',
+      '',
+      'label_0x0102:',
       '    nop',
-      '    jr #0xfd',
+      '    jr label_0x0102',
+      '',
+      'label_0x0105:',
       '    nop',
     ].join('\n'));
   });
@@ -144,9 +162,13 @@ describe('Program flow', () => {
       0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
       0x00,]));
     expect(disasm.disassemble()).to.equal(PREAMBLE + [
-      '    jr c,#0x03',
+      '    jr c,label_0x0105',
+      '',
+      'label_0x0102:',
       '    nop',
-      '    jr #0xfd',
+      '    jr label_0x0102',
+      '',
+      'label_0x0105:',
       '    nop',
     ].join('\n'));
   });
@@ -157,9 +179,13 @@ describe('Program flow', () => {
       0x00, 0x18, 0xfd, /* jr #0xfd ; relative -3 */
       0x00,]));
     expect(disasm.disassemble()).to.equal(PREAMBLE + [
-      '    djnz #0x03',
+      '    djnz label_0x0105',
+      '',
+      'label_0x0102:',
       '    nop',
-      '    jr #0xfd',
+      '    jr label_0x0102',
+      '',
+      'label_0x0105:',
       '    nop',
     ].join('\n'));
   });
