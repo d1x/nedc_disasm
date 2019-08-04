@@ -4,6 +4,7 @@ import Disasm from '../src/Disasm';
 
 const PREAMBLE = [
   '    .area CODE (ABS)',
+  '    .include "erapi.asm"',
   '    .org 0x100',
   '',
 ].join('\n');
@@ -459,12 +460,12 @@ describe('Opcodes', () => {
     expect(disasm.disassemble()).to.equal(PREAMBLE + [
 
       '    rst 0x00',
-      '    .db 0xff            ; API call',].join('\n'));
+      '    .db 0xff            ; Unknown API call',].join('\n'));
 
     disasm.setUint8Array(new Uint8Array([0xcf, 0xff,]));
     expect(disasm.disassemble()).to.equal(PREAMBLE + [
       '    rst 0x08',
-      '    .db 0xff            ; API call',].join('\n'));
+      '    .db 0xff            ; Unknown API call',].join('\n'));
   });
 
   it('should disassemble ex', () => {

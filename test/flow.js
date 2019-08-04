@@ -4,6 +4,7 @@ import Disasm from '../src/Disasm';
 
 const PREAMBLE = [
   '    .area CODE (ABS)',
+  '    .include "erapi.asm"',
   '    .org 0x100',
   '',
 ].join('\n');
