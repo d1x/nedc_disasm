@@ -2,7 +2,7 @@
 import commandLineArgs from 'command-line-args';
 import Loader from './Loader';
 import Dumper from './Dumper';
-import Disasm from './Disasm';
+import {Disasm} from './Disasm';
 
 const options = commandLineArgs(
   { name: 'input', alias: 'i', type: String, }
