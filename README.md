@@ -2,9 +2,9 @@
 
 Disassembles e-Reader z80 binaries into human readable code (assembly).
 
-## Prerequisites
+## Convert card RAW to z80 binary
 
-Download `nedcenc.exe` and `nevpk.exe` from [caitsith2's site](https://www.caitsith2.com/ereader/devtools.htm).
+Prerequisites: download `nedcenc.exe` and `nevpk.exe` from [caitsith2's site](https://www.caitsith2.com/ereader/devtools.htm).
 
 To extract the z80 binary from a card's `RAW`:
 
@@ -21,9 +21,9 @@ To extract the z80 binary from a card's `RAW`:
    nevpk.exe -d -i card.bin -o card.z80
    ```
 
-## How to disassemble
+## Disassemble z80 binary
 
-Download Node.js 11.0.0 or a later release.
+Prerequisites: Download Node.js 11.0.0 or a later release.
 
 1. Build
    ```
@@ -34,3 +34,27 @@ Download Node.js 11.0.0 or a later release.
    npm start -- -i card.z80
    ```
 This command outputs `main.asm` and multiple include files.
+
+## Build disassembled code back to RAW
+
+Prerequisites: download [SDCC](http://sdcc.sourceforge.net) and `nedcmake.exe` from [caitsith2's site](https://www.caitsith2.com/ereader/devtools.htm).
+
+1. Build
+   ```
+   sdasz80.exe -l -o -s -p main.o main.asm
+   ```
+1. Link
+   ```
+   sdldz80.exe -n -- -i main.ihx main.o
+   ```
+1. Make binary
+   ```
+   makebin.exe -p < main.ihx > main.z80
+   ```
+1. Remove first 256 bytes (0x100) from `main.z80`
+1. Generate `RAW`
+   
+   Indicate `-region 0` for Japanese e-Reader, `-region 1` for US e-Reader, `-region 2` for Japanese e-Reader+.
+   ```
+   nedcmake.exe -i main.z80 -type 1 -region 1
+   ```
