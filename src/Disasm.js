@@ -370,7 +370,7 @@ export default class Disasm {
           case 0xc9: // ret
             nextAddr = [];
             if (this.stack.length === 0) {
-              console.warn('[warn] ret without pc');
+              console.warn('[warn] found ret without saved program counter.');
             } else {
               nextAddr.push(this.stack.pop()); // restore pc
             }

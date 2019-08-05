@@ -11,7 +11,7 @@ const options = commandLineArgs(
   'use strict';
   if (!filename) {
     return console.log(
-      `Usage: node dist/cli.js -i input_file`);
+      `Usage: npm start -- -i input_file`);
   }
   const disasm = new Disasm();
   disasm.setUint8Array(new Loader(filename).asUint8Array());

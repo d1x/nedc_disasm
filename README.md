@@ -31,5 +31,6 @@ Download Node.js 11.0.0 or a later release.
    ```
 1. Disassemble 
    ```
-   node dist/cli.js -i card.z80 > card.asm
+   npm start -- -i card.z80
    ```
+This command outputs `main.asm` and multiple include files.

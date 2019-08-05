@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "babel --presets es2015 -d dist/ src",
-    "test": "mocha --require babel-core/register --require babel-polyfill"
+    "test": "mocha --require babel-core/register --require babel-polyfill",
+    "start": "node dist/cli.js"
   },
   "author": "d1x <d1x.github@gmail.com>",
   "license": "MIT",
