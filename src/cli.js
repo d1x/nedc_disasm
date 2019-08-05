@@ -1,6 +1,7 @@
 
 import commandLineArgs from 'command-line-args';
 import Loader from './Loader';
+import Dumper from './Dumper';
 import Disasm from './Disasm';
 
 const options = commandLineArgs(
@@ -15,7 +16,12 @@ const options = commandLineArgs(
   }
   const disasm = new Disasm();
   disasm.setUint8Array(new Loader(filename).asUint8Array());
-  console.log(disasm.disassemble());
+  const dumper = new Dumper();
+  const files = disasm.disassemble();
+  Object.entries(files).forEach(([filename, content]) => dumper
+    .setFilename(filename)
+    .setContent(content)
+    .writeFile());
 })(options.input);
 
 
