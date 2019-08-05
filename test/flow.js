@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 import {describe, beforeEach} from 'mocha';
-import Disasm from '../src/Disasm';
+import {Disasm} from '../src/Disasm';
 
 const PREAMBLE = [
   '    .area CODE (ABS)',

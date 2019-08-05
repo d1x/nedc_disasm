@@ -5,6 +5,7 @@ const START_ADDR = 0x100;
 /** @type {string} instruction padding */
 const PADDING = '    ';
 
+// Inferred from https://problemkaputt.de/gbatek.htm#gbacartereaderprogramcode
 const OPCODE_TABLE = {
   0x00: {mnemonic: 'nop', size: 1,},
   0x01: {mnemonic: 'ld bc,**', size: 3,},
@@ -264,11 +265,101 @@ const OPCODE_TABLE = {
   0xff: null,
 };
 
+// https://problemkaputt.de/gbatek.htm#gbacartereaderapifunctions
 const KNOWN_ER_API = {
   '0xc7_0x00': 'ER_API_FadeIn',
+  '0xc7_0x01': 'ER_API_FadeOut',
+  '0xc7_0x02': 'ER_API_BlinkWhite',
+  '0xc7_0x10': 'ER_API_LoadSystemBackground',
+  '0xc7_0x11': 'ER_API_SetBackgroundOffset',
+  '0xc7_0x12': 'ER_API_SetBackgroundAutoScroll',
+  '0xc7_0x13': 'ER_API_SetBackgroundMirrorToggle',
+  '0xc7_0x19': 'ER_API_SetBackgroundMode',
+  '0xc7_0x20': 'ER_API_LayerShow',
+  '0xc7_0x21': 'ER_API_LayerHide',
+  '0xc7_0x2d': 'ER_API_LoadCustomBackground',
+  '0xc7_0x30': 'ER_API_CreateSystemSprite',
+  '0xc7_0x31': 'ER_API_SpriteFree',
+  '0xc7_0x32': 'ER_API_SetSpritePos',
+  '0xc7_0x34': 'ER_API_SpriteFrameNext',
+  '0xc7_0x35': 'ER_API_SpriteFramePrev',
+  '0xc7_0x36': 'ER_API_SetSpriteFrame',
+  '0xc7_0x39': 'ER_API_SetSpriteAutoMove',
+  '0xc7_0x3c': 'ER_API_SpriteAutoAnimate',
+  '0xc7_0x3e': 'ER_API_SpriteAutoRotateUntilAngle',
+  '0xc7_0x3f': 'ER_API_SpriteAutoRotateByAngle',
+  '0xc7_0x40': 'ER_API_SpriteAutoRotateByTime',
+  '0xc7_0x42': 'ER_API_SetSpriteAutoMoveHorizontal',
+  '0xc7_0x43': 'ER_API_SetSpriteAutoMoveVertical',
+  '0xc7_0x45': 'ER_API_SpriteDrawOnBackground',
+  '0xc7_0x46': 'ER_API_SpriteShow',
+  '0xc7_0x47': 'ER_API_SpriteHide',
+  '0xc7_0x48': 'ER_API_SpriteMirrorToggle',
+  '0xc7_0x4c': 'ER_API_GetSpritePos',
+  '0xc7_0x4d': 'ER_API_CreateCustomSprite',
+  '0xc7_0x57': 'ER_API_SpriteMove',
+  '0xc7_0x5b': 'ER_API_SpriteAutoScaleUntilSize',
+  '0xc7_0x5c': 'ER_API_SpriteAutoScaleBySize',
+  '0xc7_0x5d': 'ER_API_SpriteAutoScaleWidthUntilSize',
+  '0xc7_0x5e': 'ER_API_SpriteAutoScaleHeightBySize',
+  '0xc7_0x66': 'ER_API_SetSpriteVisible',
+  '0xc7_0x7d': 'ER_API_Wait16bit ',
+  '0xc7_0x7e': 'ER_API_SetBackgroundPalette',
+  '0xc7_0x7f': 'ER_API_GetBackgroundPalette',
+  '0xc7_0x80': 'ER_API_SetSpritePalette',
+  '0xc7_0x81': 'ER_API_GetSpritePalette',
+  '0xc7_0x82': 'ER_API_ClearPalette',
+  '0xc7_0x8f': 'ER_API_WindowHide',
+  '0xc7_0x90': 'ER_API_CreateRegion',
+  '0xc7_0x91': 'ER_API_SetRegionColor',
+  '0xc7_0x92': 'ER_API_ClearRegion',
+  '0xc7_0x93': 'ER_API_SetPixel',
+  '0xc7_0x94': 'ER_API_GetPixel',
+  '0xc7_0x95': 'ER_API_DrawLine',
+  '0xc7_0x96': 'ER_API_DrawRect',
+  '0xc7_0x98': 'ER_API_SetTextColor',
+  '0xc7_0x99': 'ER_API_DrawText',
+  '0xc7_0x9a': 'ER_API_SetTextSize',
+  '0xc7_0xb5': 'ER_API_Sine',
+  '0xc7_0xb6': 'ER_API_Cosine',
+  '0xc7_0xc0': 'ER_API_GetTextWidth',
+  '0xc7_0xc1': 'ER_API_GetTextWidthEx',
+  '0xc7_0xdd': 'ER_API_DecompressVPKorNonVPK',
+  '0xc7_0xde': 'ER_API_FlashWriteSectorSingle',
+  '0xc7_0xdf': 'ER_API_FlashReadSectorSingle',
+  '0xc7_0xe0': 'ER_API_SoftReset',
+  '0xc7_0xe1': 'ER_API_GetCartridgeHeader',
+  '0xc7_0xed': 'ER_API_FlashWriteSectorMulti',
+  '0xc7_0xee': 'ER_API_FlashReadPart',
+  '0xc7_0xf1': 'ER_API_RandomInit',
+  '0xcf_0x03': 'ER_API_Div',
+  '0xcf_0x04': 'ER_API_DivRem',
+  '0xcf_0x05': 'ER_API_PlaySystemSound',
+  '0xcf_0x07': 'ER_API_Random8bit',
+  '0xcf_0x08': 'ER_API_SetSoundVolume',
+  '0xcf_0x09': 'ER_API_BcdTime',
+  '0xcf_0x0a': 'ER_API_BcdNumber',
+  '0xcf_0x0b': 'ER_API_IoWrite',
+  '0xcf_0x0c': 'ER_API_IoRead',
+  '0xcf_0x11': 'ER_API_DivSigned',
+  '0xcf_0x12': 'ER_API_RandomMax',
+  '0xcf_0x13': 'ER_API_SetSoundSpeed',
+  '0xcf_0x16': 'ER_API_SoundPause',
+  '0xcf_0x17': 'ER_API_SoundResume',
+  '0xcf_0x18': 'ER_API_PlaySystemSoundEx',
+  '0xcf_0x19': 'ER_API_IsSoundPlaying',
+  '0xcf_0x1d': 'ER_API_GetExitCount',
+  '0xcf_0x1e': 'ER_API_PerMille',
+  '0xcf_0x26': 'ER_API_Mosaic',
+  '0xcf_0x2f': 'ER_API_PlayCustomSound',
+  '0xcf_0x31': 'ER_API_PlayCustomSoundEx',
+  '0xcf_0x32': 'ER_API_BrightnessHalf',
+  '0xcf_0x33': 'ER_API_BrightnessNormal',
+  '0xcf_0x36': 'ER_API_ResetTimer',
+  '0xcf_0x37': 'ER_API_GetTimer',
 };
 
-export default class Disasm {
+class Disasm {
 
   constructor() {
     /** @type Object */
@@ -563,3 +654,8 @@ export default class Disasm {
     return output.join('\n');
   }
 }
+
+module.exports = {
+  Disasm,
+  KNOWN_ER_API,
+};
