@@ -17,9 +17,16 @@ describe('e-Reader API', () => {
     disasm = new Disasm();
   });
 
+  it('should disassemble ERAPI definitions', () => {
+    disasm.setUint8Array(new Uint8Array(0));
+    expect(disasm.disassemble()['erapi.asm']).to.equal([
+      '    ER_API_FadeIn = 0x00',
+    ].join('\n'));
+  });
+
   it('should disassemble ERAPI_FadeIn', () => {
     disasm.setUint8Array(new Uint8Array([0xc7, 0x00,]));
-    expect(disasm.disassemble()).to.equal(PREAMBLE + [
+    expect(disasm.disassemble()['main.asm']).to.equal(PREAMBLE + [
       '    rst 0x00',
       '    .db ER_API_FadeIn',].join('\n'));
   });

@@ -2,6 +2,8 @@
 
 /** @type {number} start program address */
 const START_ADDR = 0x100;
+/** @type {string} instruction padding */
+const PADDING = '    ';
 
 const OPCODE_TABLE = {
   0x00: {mnemonic: 'nop', size: 1,},
@@ -288,7 +290,7 @@ export default class Disasm {
     this.input = uint8array;
   }
 
-  /** @return {string} disassembled binary */
+  /** @return {Object<string, string>} disassembled binary */
   disassemble() {
     if (this.input === null) {
       return 'No input stream';
@@ -526,24 +528,38 @@ export default class Disasm {
   }
 
   /**
-   * @return {string} output
+   * @return {Object<string, string>} output
    * @private
    */
   buildOutput_() {
-    const padding = '    ';
     const PREAMBLE = [
-      `${padding}.area CODE (ABS)`,
-      `${padding}.include "erapi.asm"`,
-      `${padding}.org ${Disasm.toHexString_(START_ADDR)}`,
-      '',
-    ].join('\n');
+      `.area CODE (ABS)`,
+      `.include "erapi.asm"`,
+      `.org ${Disasm.toHexString_(START_ADDR)}\n`,
+    ].map((line) => `${PADDING}${line}`).join('\n');
 
-    return PREAMBLE + this.code.flatMap((line, lineNum) => {
-      if (line === undefined) {
-        return [];
-      }
-      const label = this.labels[lineNum] ? `\n${this.labels[lineNum]}:\n` : '';
-      return `${label}${padding}${line}`;
-    }).join('\n');
+    return {
+      'erapi.asm': this.buildErapi_(),
+      'main.asm': PREAMBLE + this.code.flatMap((line, lineNum) => {
+        if (line === undefined) {
+          return [];
+        }
+        const label = this.labels[lineNum] ? `\n${this.labels[lineNum]}:\n` : '';
+        return `${label}${PADDING}${line}`;
+      }).join('\n'),
+    };
+  }
+
+  /**
+   * @return {string} e-Reader API definition file content
+   * @private
+   */
+  buildErapi_() {
+    const output = [];
+    Object.keys(KNOWN_ER_API)
+      .sort()
+      .forEach((key) =>
+        output.push(`${PADDING}${KNOWN_ER_API[key]} = ${key.split('_')[1]}`));
+    return output.join('\n');
   }
 }
